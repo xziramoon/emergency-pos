@@ -35,7 +35,8 @@
       "oneClick": true,
       "perMachine": true,
       "runAfterFinish": false
-    }
+    },
+    "artifactName": "emergency-pos-setup-${version}.${ext}"
   },
   "devDependencies": {
     "electron": "^45.3.1",
