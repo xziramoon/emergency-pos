@@ -15,6 +15,7 @@ const Settings = {
     }
     this.$('set-msg').textContent = '';
     await this.fillPrinters(s.printer);
+    try { this.$('set-version').textContent = 'เวอร์ชันที่ใช้อยู่: ' + (await window.api.getUpdateStatus()).current; } catch { /* leave blank */ }
     await this.showProductsInfo();
     App.show('settings');
   },
@@ -91,3 +92,8 @@ Settings.$('btn-open-data').addEventListener('click', () => window.api.openDataF
 Settings.$('btn-close-settings').addEventListener('click', () => Settings.close());
 Settings.$('btn-print-test').addEventListener('click', () => Settings.runPrint(() => window.api.printTest(), 'ส่งงานพิมพ์ทดสอบแล้ว'));
 Settings.$('btn-drawer-test').addEventListener('click', () => Settings.runPrint(() => window.api.openDrawer(), 'ส่งคำสั่งเปิดลิ้นชักแล้ว'));
+Settings.$('btn-check-update').addEventListener('click', async () => {
+  Settings.$('set-msg').textContent = 'กำลังตรวจหาเวอร์ชันใหม่...';
+  const r = await window.api.checkUpdate();
+  Settings.$('set-msg').textContent = r.ok ? 'ตรวจแล้ว ถ้ามีเวอร์ชันใหม่จะแจ้งที่มุมขวาบน' : 'ตรวจไม่สำเร็จ: ' + r.error;
+});

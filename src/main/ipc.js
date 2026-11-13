@@ -22,7 +22,13 @@ const CHANNELS = {
   printReceipt: 'print:receipt',
   printTest: 'print:test',
   openDrawer: 'print:drawer',
+  installUpdate: 'update:install',
+  getUpdateStatus: 'update:get',
+  checkUpdate: 'update:check',
 };
+
+// Main -> renderer push (not an invoke channel): { state: 'idle'|'downloading'|'ready', version }
+const UPDATE_EVENT = 'update:status';
 
 // ctx: { dir, state:{products}, reloadProducts(), getPrinters(), openFolder(), printHtml(html, device), openDrawerRaw(device) }
 function register(ipc, ctx) {
@@ -63,7 +69,15 @@ function register(ipc, ctx) {
     '<!doctype html><meta charset="utf-8"><body style="font:14pt Tahoma;width:72mm;margin:0 4mm"><p>ทดสอบเครื่องพิมพ์</p><p>POS ฉุกเฉิน</p></body>',
     store.loadSettings(ctx.dir).printer)));
   ipc.handle(CHANNELS.openDrawer, () => asResult(() => ctx.openDrawerRaw(store.loadSettings(ctx.dir).printer)));
+  // Update flow: the renderer shows a banner; installing restarts the app, so only when a download is complete.
+  ipc.handle(CHANNELS.getUpdateStatus, () => ({ ...ctx.state.update, current: ctx.version }));
+  ipc.handle(CHANNELS.installUpdate, () => {
+    if (!ctx.state.update || ctx.state.update.state !== 'ready') return { ok: false, error: 'ยังไม่มีเวอร์ชันใหม่ที่ดาวน์โหลดเสร็จ' };
+    ctx.installUpdate();
+    return { ok: true };
+  });
+  ipc.handle(CHANNELS.checkUpdate, () => asResult(() => ctx.checkUpdate()));
   ipc.handle(CHANNELS.openDataFolder, () => { ctx.openFolder(); });
 }
 
-module.exports = { CHANNELS, register };
+module.exports = { CHANNELS, UPDATE_EVENT, register };

@@ -11,7 +11,7 @@ if (!app.requestSingleInstanceLock()) {
   app.quit();
 } else {
   const dir = app.getPath('userData');
-  const state = { products: null };
+  const state = { products: null, update: { state: 'idle' } };
   let win = null;
 
   const reloadProducts = () => { state.products = loadProducts(dir); };
@@ -33,6 +33,12 @@ if (!app.requestSingleInstanceLock()) {
       openFolder: () => shell.openPath(dir),
       printHtml,
       openDrawerRaw,
+      version: app.getVersion(),
+      installUpdate: () => require('electron-updater').autoUpdater.quitAndInstall(false, true),
+      checkUpdate: async () => {
+        if (!app.isPackaged) throw new Error('ตรวจเวอร์ชันได้เฉพาะโปรแกรมที่ติดตั้งแล้ว');
+        await require('electron-updater').autoUpdater.checkForUpdates();
+      },
     });
 
     win = new BrowserWindow({
@@ -60,7 +66,12 @@ if (!app.requestSingleInstanceLock()) {
 
     // Check GitHub Releases shortly after start (and every 6 h); installs on next quit, never mid-sale.
     const { autoUpdater } = require('electron-updater');
-    setTimeout(() => setupAutoUpdate({ autoUpdater, isPackaged: app.isPackaged, log: (x) => console.error(x) }), 15000);
+    const push = (s) => { state.update = s; if (win && !win.isDestroyed()) win.webContents.send('update:status', { ...s, current: app.getVersion() }); };
+    setTimeout(() => setupAutoUpdate({
+      autoUpdater, isPackaged: app.isPackaged, log: (x) => console.error(x),
+      onAvailable: (v) => push({ state: 'downloading', version: v }),
+      onReady: (v) => push({ state: 'ready', version: v }),
+    }), 15000);
     setInterval(() => { if (app.isPackaged) autoUpdater.checkForUpdates().catch(() => {}); }, 6 * 3600 * 1000);
 
     setInterval(() => { try { store.makeBackup(dir, new Date()); } catch { /* keep selling */ } }, 30 * 60 * 1000);

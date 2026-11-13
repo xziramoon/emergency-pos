@@ -1,0 +1,343 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-13T23:01:14.914Z",
+  "title": "Design System: POS ฉุกเฉิน",
+  "extensions": {
+    "colorMeta": {
+      "go": {
+        "role": "primary",
+        "displayName": "Counter Green",
+        "canonical": "#0b7a54",
+        "tonalRamp": [
+          "#053726",
+          "#074f37",
+          "#096445",
+          "#0b7a54",
+          "#3c9576",
+          "#6daf98",
+          "#a2ccbe",
+          "#d3e7e0"
+        ]
+      },
+      "mint": {
+        "role": "primary",
+        "displayName": "Display Mint",
+        "canonical": "#7ff0b9",
+        "tonalRamp": [
+          "#396c53",
+          "#539c78",
+          "#68c598",
+          "#7ff0b9",
+          "#99f3c7",
+          "#b2f6d5",
+          "#cef9e4",
+          "#e8fcf2"
+        ]
+      },
+      "navy": {
+        "role": "secondary",
+        "displayName": "Deep Counter Navy",
+        "canonical": "#0e2a40",
+        "tonalRamp": [
+          "#06131d",
+          "#091b2a",
+          "#0b2234",
+          "#0e2a40",
+          "#3e5566",
+          "#6e7f8c",
+          "#a3aeb6",
+          "#d4d9dd"
+        ]
+      },
+      "navy-2": {
+        "role": "secondary",
+        "displayName": "Navy Lift",
+        "canonical": "#163a56",
+        "tonalRamp": [
+          "#0a1a27",
+          "#0e2638",
+          "#123047",
+          "#163a56",
+          "#456178",
+          "#73899a",
+          "#a6b4bf",
+          "#d5dce1"
+        ]
+      },
+      "warn": {
+        "role": "tertiary",
+        "displayName": "Attention Amber",
+        "canonical": "#8a4b00",
+        "tonalRamp": [
+          "#3e2200",
+          "#5a3100",
+          "#713e00",
+          "#8a4b00",
+          "#a16f33",
+          "#b99366",
+          "#d3bb9e",
+          "#eadfd1"
+        ]
+      },
+      "danger": {
+        "role": "tertiary",
+        "displayName": "Stop Red",
+        "canonical": "#b3261e",
+        "tonalRamp": [
+          "#51110e",
+          "#741914",
+          "#931f19",
+          "#b3261e",
+          "#c2514b",
+          "#d17d78",
+          "#e2adaa",
+          "#f1d8d7"
+        ]
+      },
+      "focus": {
+        "role": "tertiary",
+        "displayName": "Focus Blue",
+        "canonical": "#1a64c0",
+        "tonalRamp": [
+          "#0c2d56",
+          "#11417d",
+          "#15529d",
+          "#1a64c0",
+          "#4883cd",
+          "#76a2d9",
+          "#a8c4e7",
+          "#d6e3f4"
+        ]
+      },
+      "ground": {
+        "role": "neutral",
+        "displayName": "Cool Ground",
+        "canonical": "#f2f5f8",
+        "tonalRamp": [
+          "#6d6e70",
+          "#9d9fa1",
+          "#c6c9cb",
+          "#f2f5f8",
+          "#f5f7f9",
+          "#f7f9fb",
+          "#fafbfc",
+          "#fdfdfe"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Paper White",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "#737373",
+          "#a6a6a6",
+          "#d1d1d1",
+          "#ffffff",
+          "#ffffff",
+          "#ffffff",
+          "#ffffff",
+          "#ffffff"
+        ]
+      },
+      "sunken": {
+        "role": "neutral",
+        "displayName": "Sunken Slate",
+        "canonical": "#e9eef3",
+        "tonalRamp": [
+          "#696b6d",
+          "#979b9e",
+          "#bfc3c7",
+          "#e9eef3",
+          "#edf1f5",
+          "#f2f5f8",
+          "#f7f9fa",
+          "#fbfcfd"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#12212e",
+        "tonalRamp": [
+          "#080f15",
+          "#0c151e",
+          "#0f1b26",
+          "#12212e",
+          "#414d58",
+          "#717a82",
+          "#a5abb0",
+          "#d4d7d9"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted Slate",
+        "canonical": "#566879",
+        "tonalRamp": [
+          "#272f36",
+          "#38444f",
+          "#475563",
+          "#566879",
+          "#788694",
+          "#9aa4af",
+          "#bfc6cc",
+          "#e1e4e7"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "#d3dce5",
+        "tonalRamp": [
+          "#5f6367",
+          "#898f95",
+          "#adb4bc",
+          "#d3dce5",
+          "#dce3ea",
+          "#e5eaef",
+          "#eef2f5",
+          "#f7f9fa"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "The total only."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "All running text, line-height 1.55."
+      }
+    },
+    "shadows": [
+      {
+        "name": "surface",
+        "value": "0 1px 2px rgba(14,42,64,.08), 0 4px 14px rgba(14,42,64,.06)",
+        "purpose": "Work surfaces."
+      },
+      {
+        "name": "dialog",
+        "value": "0 28px 80px rgba(8,24,38,.45)",
+        "purpose": "Modal dialogs."
+      },
+      {
+        "name": "pay",
+        "value": "0 6px 16px rgba(11,122,84,.28)",
+        "purpose": "Enabled pay button."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out-expo",
+        "value": "cubic-bezier(.16, 1, .3, 1)",
+        "purpose": "Dialog, row and banner entrances."
+      },
+      {
+        "name": "total-tick",
+        "value": "260ms ease-out cubic",
+        "purpose": "Total numerals tick to the new amount."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "compact",
+        "value": "1180px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Go Button",
+      "kind": "button",
+      "refersTo": "button-go",
+      "description": "The single next-action button (confirm, add, pay).",
+      "html": "<button class=\"ds-btn ds-go\">ยืนยันรับเงิน</button>",
+      "css": ".ds-btn{display:inline-flex;align-items:center;gap:10px;font:700 18px 'Leelawadee UI',Tahoma,sans-serif;min-height:48px;padding:8px 20px;border:1.5px solid #d3dce5;border-radius:10px;background:#fff;color:#12212e;cursor:pointer}.ds-btn:hover{background:#e9eef3}.ds-btn:focus-visible{outline:3px solid #1a64c0;outline-offset:2px}.ds-go{background:#0b7a54;border-color:#0b7a54;color:#fff}.ds-go:hover{background:#086443;border-color:#086443}"
+    },
+    {
+      "name": "Default Button",
+      "kind": "button",
+      "refersTo": "button-default",
+      "description": "Secondary action.",
+      "html": "<button class=\"ds-btn\">ยกเลิก</button>",
+      "css": ".ds-btn{display:inline-flex;align-items:center;gap:10px;font:700 18px 'Leelawadee UI',Tahoma,sans-serif;min-height:48px;padding:8px 20px;border:1.5px solid #d3dce5;border-radius:10px;background:#fff;color:#12212e;cursor:pointer}.ds-btn:hover{background:#e9eef3}.ds-btn:focus-visible{outline:3px solid #1a64c0;outline-offset:2px}.ds-go{background:#0b7a54;border-color:#0b7a54;color:#fff}.ds-go:hover{background:#086443;border-color:#086443}"
+    },
+    {
+      "name": "Scan Field",
+      "kind": "input",
+      "refersTo": "input-scan",
+      "description": "Always-focused barcode / name entry.",
+      "html": "<input class=\"ds-scan\" placeholder=\"ยิงบาร์โค้ด หรือพิมพ์ชื่อสินค้า แล้วกด Enter\">",
+      "css": ".ds-scan{width:100%;font:400 23px 'Leelawadee UI',Tahoma,sans-serif;padding:17px 20px;border:2px solid #d3dce5;border-radius:14px;background:#fff;color:#12212e;box-shadow:0 1px 2px rgba(14,42,64,.08),0 4px 14px rgba(14,42,64,.06)}.ds-scan:focus{outline:4px solid rgba(26,100,192,.22);border-color:#1a64c0}"
+    },
+    {
+      "name": "Total Panel",
+      "kind": "custom",
+      "refersTo": "panel-total",
+      "description": "Signature: big tabular total on navy.",
+      "html": "<div class=\"ds-total\"><small>ยอดที่ต้องชำระ</small><div><span class=\"b\">฿</span>121.53</div><small>2 รายการ · 3 ชิ้น</small></div>",
+      "css": ".ds-total{background:#0e2a40;color:#9db5c7;border-radius:16px;padding:18px 22px 16px;text-align:right;font-family:'Leelawadee UI',Tahoma,sans-serif}.ds-total div{color:#7ff0b9;font-size:64px;font-weight:700;line-height:1.2;font-variant-numeric:tabular-nums}.ds-total .b{font-size:32px;opacity:.75;margin-right:8px}"
+    },
+    {
+      "name": "Banknote Chip",
+      "kind": "chip",
+      "refersTo": "chip-banknote",
+      "description": "Tap the cash amount received.",
+      "html": "<button class=\"ds-chip\">500</button>",
+      "css": ".ds-chip{min-width:72px;min-height:44px;padding:0 16px;border-radius:10px;border:1.5px solid #d3dce5;background:#fff;color:#12212e;font:700 18px 'Leelawadee UI',Tahoma,sans-serif;font-variant-numeric:tabular-nums;cursor:pointer}.ds-chip:hover{background:#e3f5ed;border-color:#0b7a54}"
+    },
+    {
+      "name": "Attention Tag",
+      "kind": "chip",
+      "refersTo": "tag-attention",
+      "description": "คีย์เอง / แก้ราคา flag on a cart line.",
+      "html": "<span class=\"ds-tag\">คีย์เอง</span>",
+      "css": ".ds-tag{display:inline-block;font:700 13px 'Leelawadee UI',Tahoma,sans-serif;padding:0 10px;border-radius:99px;background:#fff1d9;color:#8a4b00;border:1px solid #e6b765}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Counter Display",
+    "overview": "A bright service-counter screen: one big total, one green next-action, a three-step strip. Everything else is quiet.",
+    "keyCharacteristics": [
+      "Cool near-white ground, navy shell and total",
+      "Green only for the next action",
+      "Tabular money numerals, generous Thai line-height",
+      "Total panel numerals tick to the new amount"
+    ],
+    "rules": [
+      {
+        "name": "The One Go Rule",
+        "body": "Green appears on exactly one primary action per screen or dialog.",
+        "section": "colors"
+      },
+      {
+        "name": "The Navy Is Numbers Rule",
+        "body": "Mint numerals live only on navy.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tabular Money Rule",
+        "body": "Every amount uses tabular numerals and two decimals.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat-Until-Enabled Rule",
+        "body": "A disabled action loses its shadow and drops to 45% opacity.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do keep the scan field focused and the total visible at every viewport.",
+      "Do say state in words, with an icon or label beside any colour.",
+      "Do keep Thai line-height ≥ 1.5.",
+      "Do keep icons drawn, 2px stroke, one set."
+    ],
+    "donts": [
+      "Don't add a second green action to a screen.",
+      "Don't reintroduce cream paper and red accents.",
+      "Don't touch the receipt output when restyling.",
+      "Don't load web fonts or remote assets."
+    ]
+  }
+}

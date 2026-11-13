@@ -32,6 +32,14 @@
     </defs>
   </svg>
 
+  <!-- แจ้งเวอร์ชันใหม่ (ทุกหน้า) -->
+  <div id="update-banner" class="update-banner" role="status" hidden>
+    <svg class="ic"><use href="#i-refresh"/></svg>
+    <span id="update-text"></span>
+    <button id="update-go" class="btn btn-go btn-small" hidden>อัปเดตเลย</button>
+    <button id="update-later" class="btn btn-quiet btn-small" hidden>ไว้ทีหลัง</button>
+  </div>
+
   <!-- เลือกพนักงาน -->
   <section id="view-staff" class="view view-staff" hidden>
     <div class="welcome">
@@ -213,6 +221,14 @@
         <div class="row">
           <button id="btn-print-test" class="btn"><svg class="ic"><use href="#i-printer"/></svg>พิมพ์ทดสอบ</button>
           <button id="btn-drawer-test" class="btn btn-quiet">ทดสอบเปิดลิ้นชัก (สำรอง)</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>โปรแกรม</h2>
+        <p id="set-version" class="muted"></p>
+        <div class="row">
+          <button id="btn-check-update" class="btn"><svg class="ic"><use href="#i-refresh"/></svg>ตรวจหาเวอร์ชันใหม่</button>
         </div>
       </section>
 

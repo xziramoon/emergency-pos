@@ -197,6 +197,10 @@ input[type=number] { font-variant-numeric: tabular-nums; }
 .sb-item.warn, #sb-products.warn { color: var(--warn); font-weight: 700; }
 #sb-warning { background: var(--warn-soft); border: 1px solid var(--warn-line); border-radius: 99px; padding: 0 14px; }
 
+/* แจ้งเวอร์ชันใหม่ */
+.update-banner { position: fixed; z-index: 30; bottom: 56px; right: 22px; display: flex; align-items: center; gap: 12px; max-width: min(560px, calc(100vw - 44px)); padding: 10px 14px 10px 18px; background: var(--surface); color: var(--ink); border: 1.5px solid var(--go); border-radius: 14px; font-weight: 700; box-shadow: 0 12px 32px rgba(14, 42, 64, .22); animation: dlg-in .3s var(--ease); }
+.update-banner .ic { color: var(--go); }
+
 /* กล่องโต้ตอบ */
 dialog { border: 0; border-radius: 18px; padding: 26px 28px; width: min(540px, 94vw); background: var(--surface); color: var(--ink); box-shadow: 0 28px 80px rgba(8, 24, 38, .45); }
 dialog[open] { animation: dlg-in .22s var(--ease); }

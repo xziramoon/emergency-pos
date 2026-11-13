@@ -58,3 +58,34 @@ document.getElementById('btn-open-settings').addEventListener('click', () => Set
 document.getElementById('btn-sell-settings').addEventListener('click', () => Settings.open('sell'));
 
 App.showStaffPicker();
+
+// Update banner: main pushes status; installing restarts the app, so never in the middle of a sale.
+const Updater = {
+  $: (id) => document.getElementById(id),
+  show(s) {
+    const box = this.$('update-banner');
+    if (!s || s.state === 'idle') { box.hidden = true; return; }
+    const ready = s.state === 'ready';
+    this.$('update-text').textContent = ready
+      ? `มีโปรแกรมเวอร์ชันใหม่ ${s.version}`
+      : `กำลังดาวน์โหลดเวอร์ชันใหม่ ${s.version} ขายต่อได้ตามปกติ`;
+    this.$('update-go').hidden = !ready;
+    this.$('update-later').hidden = !ready;
+    box.hidden = false;
+  },
+  async install() {
+    if (typeof Sell !== 'undefined' && Sell.cart.length > 0) {
+      this.$('update-text').textContent = 'จบบิลนี้ก่อน แล้วค่อยกดอัปเดต';
+      return;
+    }
+    const r = await window.api.installUpdate();
+    if (!r.ok) this.$('update-text').textContent = r.error;
+  },
+  init() {
+    this.$('update-go').addEventListener('click', () => this.install());
+    this.$('update-later').addEventListener('click', () => { this.$('update-banner').hidden = true; });
+    window.api.onUpdateStatus((s) => this.show(s));
+    window.api.getUpdateStatus().then((s) => this.show(s)).catch(() => {});
+  },
+};
+Updater.init();

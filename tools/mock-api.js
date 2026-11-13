@@ -38,6 +38,10 @@
     printReceipt: async () => ({ ok: true }),
     printTest: async () => ({ ok: true }),
     openDrawer: async () => ({ ok: true }),
+    installUpdate: async () => ({ ok: true }),
+    getUpdateStatus: async () => ({ state: new URLSearchParams(location.search).get('demo') === 'update' ? 'ready' : 'idle', version: '0.3.0', current: '0.2.0' }),
+    checkUpdate: async () => ({ ok: true }),
+    onUpdateStatus: () => {},
   };
 
   // ?demo=sell logs in and scans two items; ?demo=pay also opens the payment dialog (for screenshots).

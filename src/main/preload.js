@@ -19,4 +19,8 @@ contextBridge.exposeInMainWorld('api', {
   printReceipt: call('print:receipt'),
   printTest: call('print:test'),
   openDrawer: call('print:drawer'),
+  installUpdate: call('update:install'),
+  getUpdateStatus: call('update:get'),
+  checkUpdate: call('update:check'),
+  onUpdateStatus: (cb) => ipcRenderer.on('update:status', (_e, s) => cb(s)),
 });
