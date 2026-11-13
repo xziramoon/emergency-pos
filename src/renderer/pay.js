@@ -16,7 +16,9 @@ const Pay = {
     this.$('pay-total').textContent = Sell.fmt(this.total);
     for (const id of ['pay-cash', 'pay-transfer', 'pay-gov']) this.$(id).value = '';
     this.busy = false;
+    this.justPaid = false;
     this.update();
+    Sell.setStep(2);
     this.$('dlg-pay').showModal();
     this.$('pay-cash').focus();
   },
@@ -25,6 +27,10 @@ const Pay = {
     const r = Bill.validatePayments(this.total, this.amounts());
     this.$('pay-change').textContent = Sell.fmt(r.ok ? r.change : 0);
     const anyInput = Object.values(this.amounts()).some((v) => v > 0);
+    const am = this.amounts();
+    this.$('pm-cash').classList.toggle('has-value', am.cash > 0);
+    this.$('pm-transfer').classList.toggle('has-value', am.transfer > 0);
+    this.$('pm-gov').classList.toggle('has-value', am.gov > 0);
     this.$('pay-err').textContent = !r.ok && anyInput ? r.error : '';
     this.$('pay-confirm').disabled = !r.ok || this.busy;
     return r;
@@ -45,6 +51,7 @@ const Pay = {
       // Main process saves to disk first, then prints (spec 6.3). A save failure throws; a print failure
       // comes back as printed:false with the bill already safe.
       const res = await window.api.confirmBill(bill);
+      this.justPaid = true;
       this.$('dlg-pay').close();
       Sell.lastSaved = res.saved;
       const change = `เงินทอน ${Sell.fmt(r.change)}`;
@@ -52,6 +59,7 @@ const Pay = {
         ? `บันทึกบิลแล้ว (${change})`
         : `บันทึกบิลแล้ว (${change}) แต่พิมพ์ใบเสร็จไม่สำเร็จ: ${res.error} — กด "พิมพ์ใบล่าสุดซ้ำ"`);
       Sell.showReprint(!res.printed);
+      Sell.setStep(3);
       App.refreshStatus();
       return res.saved;
     } catch (err) {
@@ -69,6 +77,11 @@ const Pay = {
     this.$('pay-full-transfer').addEventListener('click', () => {
       this.$('pay-transfer').value = this.total; this.$('pay-cash').value = ''; this.$('pay-gov').value = ''; this.update();
     });
+    // Banknote chips: tap what the customer handed over (replaces typing for the common case).
+    this.$('cash-chips').querySelectorAll('[data-cash]').forEach((b) => b.addEventListener('click', () => {
+      this.$('pay-cash').value = b.dataset.cash; this.update(); this.$('pay-cash').focus();
+    }));
+    this.$('dlg-pay').addEventListener('close', () => { if (!this.justPaid) Sell.setStep(1); });
     this.$('form-pay').addEventListener('submit', (e) => this.confirm(e));
     this.$('pay-cancel').addEventListener('click', () => { this.$('dlg-pay').close(); });
   },

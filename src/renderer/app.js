@@ -17,13 +17,13 @@ const App = {
     const wb = document.getElementById('sb-warning');
     wb.textContent = warns.length ? '⚠ ' + warns[warns.length - 1] : '';
     wb.hidden = warns.length === 0;
-    document.getElementById('sb-cashier').textContent = 'พนักงาน: ' + (this.cashier || '-');
-    document.getElementById('sb-machine').textContent = 'เครื่อง: ' + this.settings.machineId;
+    document.getElementById('sb-cashier').textContent = this.cashier || '-';
+    document.getElementById('sb-machine').textContent = 'เครื่อง ' + this.settings.machineId;
     const sp = document.getElementById('sb-products');
     const when = st.updatedAt ? new Date(st.updatedAt).toLocaleString('th-TH') : 'ยังไม่เคยอัปเดต';
-    sp.textContent = `สินค้า ${st.count.toLocaleString('th-TH')} รายการ · อัปเดต ${when}`;
+    sp.textContent = st.count ? `สินค้า ${st.count.toLocaleString('th-TH')} รายการ · อัปเดต ${when}${st.stale ? ' (ข้อมูลเก่า ควรอัปเดต)' : ''}` : 'ยังไม่มีรายการสินค้า: ไปที่ ตั้งค่า > URL รายการสินค้า';
     sp.className = st.stale ? 'warn' : '';
-    document.getElementById('sb-pending').textContent = `บิลค้างส่ง ${pend.length}`;
+    document.getElementById('sb-pending').textContent = pend.length ? `บิลรอส่งเข้า POS หลัก ${pend.length} บิล` : 'ไม่มีบิลค้าง';
   },
 
   async showStaffPicker() {
@@ -32,8 +32,13 @@ const App = {
     list.textContent = '';
     for (const name of this.settings.staff) {
       const b = document.createElement('button');
-      b.className = 'btn';
-      b.textContent = name;
+      b.className = 'staff-btn';
+      const av = document.createElement('span');
+      av.className = 'avatar';
+      av.textContent = Array.from(name.replace(/[^\p{L}\p{N}]/gu, ''))[0] || '?';
+      const nm = document.createElement('span');
+      nm.textContent = name;
+      b.append(av, nm);
       b.addEventListener('click', () => this.login(name));
       list.appendChild(b);
     }

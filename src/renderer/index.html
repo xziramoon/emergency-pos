@@ -8,44 +8,101 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <!-- ไอคอนทั้งหมดวาดเอง เส้น 2px ชุดเดียวกัน -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="i-barcode" viewBox="0 0 24 24"><path d="M3 5v14M7 5v14M11 5v14M14 5v14M18 5v14M21 5v14"/></symbol>
+      <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h9M19 7h1M4 17h1M11 17h9"/><circle cx="16" cy="7" r="2.5"/><circle cx="8" cy="17" r="2.5"/></symbol>
+      <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12h10l1-12M9 7V4h6v3"/></symbol>
+      <symbol id="i-printer" viewBox="0 0 24 24"><path d="M7 9V4h10v5M7 17H5a1 1 0 0 1-1-1v-5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v5a1 1 0 0 1-1 1h-2"/><rect x="7" y="14" width="10" height="6"/></symbol>
+      <symbol id="i-cash" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6.5 12h.01M17.5 12h.01"/></symbol>
+      <symbol id="i-qr" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><path d="M14 14h2v2M20 14v.01M14 20h2M18 18h2v2"/></symbol>
+      <symbol id="i-landmark" viewBox="0 0 24 24"><path d="M3 10l9-6 9 6M5 10v8M9 10v8M15 10v8M19 10v8M3 20h18"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></symbol>
+      <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17v.01"/></symbol>
+      <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20a8 8 0 0 1 16 0"/></symbol>
+      <symbol id="i-box" viewBox="0 0 24 24"><path d="M4 8l8-4 8 4v8l-8 4-8-4zM4 8l8 4 8-4M12 12v8"/></symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+      <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+      <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+      <symbol id="i-back" viewBox="0 0 24 24"><path d="M14 6l-6 6 6 6"/></symbol>
+      <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+      <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14-4M4 4v4h4M4 13a8 8 0 0 0 14 4M20 20v-4h-4"/></symbol>
+    </defs>
+  </svg>
+
   <!-- เลือกพนักงาน -->
-  <section id="view-staff" class="view" hidden>
-    <div class="card center">
-      <h1>POS ฉุกเฉิน</h1>
-      <p class="muted">เลือกชื่อพนักงาน</p>
+  <section id="view-staff" class="view view-staff" hidden>
+    <div class="welcome">
+      <p class="welcome-shop">ร้านอึ้งลักเส็ง</p>
+      <h1>สวัสดี วันนี้ใครเป็นคนขาย?</h1>
+      <p class="muted">แตะชื่อของคุณเพื่อเริ่มขาย</p>
       <div id="staff-list" class="staff-grid"></div>
-      <p id="staff-empty" class="muted" hidden>ยังไม่มีรายชื่อพนักงาน กรุณาเพิ่มในหน้าตั้งค่า</p>
-      <button id="btn-open-settings" class="btn btn-ghost">ตั้งค่า</button>
+      <p id="staff-empty" class="empty-note" hidden>ยังไม่มีรายชื่อพนักงาน กรุณาเพิ่มในหน้าตั้งค่า</p>
+      <button id="btn-open-settings" class="btn btn-quiet"><svg class="ic"><use href="#i-sliders"/></svg>ตั้งค่า</button>
     </div>
   </section>
 
-  <!-- หน้าขาย (เพิ่มใน Task 6) -->
-  <section id="view-sell" class="view" hidden>
+  <!-- หน้าขาย -->
+  <section id="view-sell" class="view view-sell" hidden>
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-name">ร้านอึ้งลักเส็ง</span>
+        <span class="badge-emergency">POS ฉุกเฉิน</span>
+      </div>
+      <ol class="steps" aria-label="ขั้นตอนการขาย">
+        <li id="step-1" class="step is-active"><span class="step-n">1</span><span class="step-t">สแกนสินค้า</span></li>
+        <li id="step-2" class="step"><span class="step-n">2</span><span class="step-t">รับเงิน</span></li>
+        <li id="step-3" class="step"><span class="step-n">3</span><span class="step-t">ใบเสร็จ</span></li>
+      </ol>
+      <div class="topbar-right">
+        <span class="chip"><svg class="ic"><use href="#i-user"/></svg><span id="sb-cashier"></span></span>
+        <span class="chip chip-quiet" id="sb-machine"></span>
+        <button id="btn-sell-settings" class="btn btn-quiet btn-small" aria-label="ตั้งค่า"><svg class="ic"><use href="#i-sliders"/></svg>ตั้งค่า</button>
+      </div>
+    </header>
+
     <div id="sell-root" class="sell">
       <div class="sell-main">
         <div class="scan-wrap">
-          <input id="scan" type="text" autocomplete="off" spellcheck="false" placeholder="ยิงบาร์โค้ด หรือพิมพ์ชื่อสินค้า แล้วกด Enter">
+          <svg class="ic scan-ic"><use href="#i-barcode"/></svg>
+          <input id="scan" type="text" autocomplete="off" spellcheck="false" placeholder="ยิงบาร์โค้ด หรือพิมพ์ชื่อสินค้า แล้วกด Enter" aria-label="ช่องสแกนสินค้า">
           <ul id="results" class="results" hidden></ul>
         </div>
         <div class="cart-scroll">
           <table class="cart">
             <thead>
-              <tr><th>#</th><th>สินค้า</th><th class="num">ราคา</th><th class="num">จำนวน</th><th class="num">ส่วนลด</th><th class="num">รวม</th><th></th></tr>
+              <tr><th class="col-i">#</th><th>สินค้า</th><th class="num">ราคา</th><th class="num">จำนวน</th><th class="num">ส่วนลด</th><th class="num">รวม</th><th class="col-x"></th></tr>
             </thead>
             <tbody id="cart-body"></tbody>
           </table>
-          <p id="cart-empty" class="muted center-text">ยังไม่มีรายการ ยิงบาร์โค้ดเพื่อเริ่มขาย</p>
+          <div id="cart-empty" class="empty">
+            <svg class="empty-art" viewBox="0 0 160 110" aria-hidden="true">
+              <rect x="24" y="30" width="112" height="60" rx="10" class="ea-body"/>
+              <path d="M44 48v24M52 48v24M60 48v24M70 48v24M78 48v24M90 48v24M98 48v24" class="ea-bars"/>
+              <path d="M18 58h124" class="ea-beam"/>
+              <rect x="56" y="90" width="48" height="10" rx="3" class="ea-foot"/>
+            </svg>
+            <p class="empty-title">ยังไม่มีสินค้าในบิล</p>
+            <p class="empty-hint">ยิงบาร์โค้ดสินค้าชิ้นแรกเพื่อเริ่มขาย<br>หรือพิมพ์ชื่อสินค้าในช่องด้านบน แล้วกด Enter</p>
+          </div>
         </div>
       </div>
+
       <aside class="sell-side">
-        <div class="total-box">
-          <div class="muted">ยอดรวม</div>
-          <div id="total" class="total">0.00</div>
-          <div id="counts" class="muted">0 รายการ 0 ชิ้น</div>
+        <div class="total-box" aria-live="polite">
+          <div class="total-label">ยอดที่ต้องชำระ</div>
+          <div class="total"><span class="baht">฿</span><span id="total">0.00</span></div>
+          <div id="counts" class="total-counts">0 รายการ · 0 ชิ้น</div>
         </div>
-        <button id="btn-pay" class="btn btn-primary big" disabled>รับเงิน (F11)</button>
-        <button id="btn-clear" class="btn big" disabled>ล้างบิล</button>
-        <button id="btn-reprint" class="btn big" hidden>พิมพ์ใบล่าสุดซ้ำ</button>
+        <button id="btn-pay" class="btn btn-go btn-xl" disabled>
+          <span>รับเงิน</span><kbd>F11</kbd>
+        </button>
+        <div class="side-row">
+          <button id="btn-clear" class="btn btn-quiet" disabled><svg class="ic"><use href="#i-trash"/></svg>ล้างบิล</button>
+          <button id="btn-reprint" class="btn btn-quiet" hidden><svg class="ic"><use href="#i-printer"/></svg>พิมพ์ใบล่าสุดซ้ำ</button>
+        </div>
         <p id="sell-msg" class="notice" role="status"></p>
       </aside>
     </div>
@@ -53,88 +110,133 @@
     <dialog id="dlg-clear">
       <form method="dialog" id="form-clear">
         <h2>ล้างบิลนี้ทั้งหมด?</h2>
-        <p class="muted">รายการทั้งหมดในบิลปัจจุบันจะถูกลบ</p>
-        <div class="row">
-          <button type="submit" id="clear-yes" class="btn btn-primary">ล้างบิล</button>
-          <button type="button" id="clear-no" class="btn btn-ghost">ไม่ล้าง</button>
+        <p class="muted">รายการทั้งหมดในบิลปัจจุบันจะถูกลบ และกู้คืนไม่ได้</p>
+        <div class="dlg-actions">
+          <button type="button" id="clear-no" class="btn">ไม่ล้าง</button>
+          <button type="submit" id="clear-yes" class="btn btn-danger">ล้างบิล</button>
         </div>
       </form>
     </dialog>
 
     <dialog id="dlg-manual">
       <form method="dialog" id="form-manual">
-        <h2>เพิ่มสินค้าเอง</h2>
+        <h2>ไม่พบสินค้านี้ในรายการ</h2>
         <p id="manual-hint" class="muted"></p>
         <label>ชื่อสินค้า <input id="man-name" type="text" required></label>
-        <label>ราคา (บาท) <input id="man-price" type="number" min="0" step="0.01" required></label>
-        <label>จำนวน <input id="man-qty" type="number" min="1" step="1" value="1" required></label>
+        <div class="two-col">
+          <label>ราคา (บาท) <input id="man-price" type="number" min="0" step="0.01" required></label>
+          <label>จำนวน <input id="man-qty" type="number" min="1" step="1" value="1" required></label>
+        </div>
         <p id="man-err" class="error" role="alert"></p>
-        <div class="row">
-          <button type="submit" class="btn btn-primary">เพิ่มเข้าบิล</button>
-          <button type="button" id="man-cancel" class="btn btn-ghost">ยกเลิก</button>
+        <div class="dlg-actions">
+          <button type="button" id="man-cancel" class="btn">ยกเลิก</button>
+          <button type="submit" class="btn btn-go">เพิ่มเข้าบิล</button>
         </div>
       </form>
     </dialog>
 
-    <dialog id="dlg-pay">
+    <dialog id="dlg-pay" class="dlg-pay">
       <form method="dialog" id="form-pay">
-        <h2>รับเงิน</h2>
-        <div class="pay-total"><span class="muted">ยอดบิล</span> <b id="pay-total">0.00</b></div>
-        <label>เงินสด <input id="pay-cash" type="number" min="0" step="0.01" inputmode="decimal"></label>
-        <label>เงินโอน / QR <input id="pay-transfer" type="number" min="0" step="0.01" inputmode="decimal"></label>
-        <label>โครงการรัฐ <input id="pay-gov" type="number" min="0" step="0.01" inputmode="decimal"></label>
-        <div class="row">
-          <button type="button" id="pay-exact" class="btn">เงินสดพอดี</button>
-          <button type="button" id="pay-full-transfer" class="btn">โอนเต็มจำนวน</button>
+        <div class="pay-head">
+          <h2>รับเงิน</h2>
+          <div class="pay-total"><span class="muted">ยอดบิล</span><b id="pay-total">0.00</b></div>
         </div>
-        <div class="pay-change"><span class="muted">เงินทอน</span> <b id="pay-change">0.00</b></div>
+
+        <div class="pay-methods">
+          <label class="pay-method" id="pm-cash">
+            <span class="pm-name"><svg class="ic"><use href="#i-cash"/></svg>เงินสด</span>
+            <input id="pay-cash" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00">
+          </label>
+          <div class="chips" id="cash-chips" aria-label="เลือกแบงก์ที่รับมา">
+            <button type="button" class="chip-btn" data-cash="20">20</button>
+            <button type="button" class="chip-btn" data-cash="50">50</button>
+            <button type="button" class="chip-btn" data-cash="100">100</button>
+            <button type="button" class="chip-btn" data-cash="500">500</button>
+            <button type="button" class="chip-btn" data-cash="1000">1,000</button>
+            <button type="button" id="pay-exact" class="chip-btn chip-exact">พอดี</button>
+          </div>
+          <label class="pay-method" id="pm-transfer">
+            <span class="pm-name"><svg class="ic"><use href="#i-qr"/></svg>เงินโอน / QR</span>
+            <input id="pay-transfer" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00">
+            <button type="button" id="pay-full-transfer" class="btn btn-small btn-quiet">โอนเต็มจำนวน</button>
+          </label>
+          <label class="pay-method" id="pm-gov">
+            <span class="pm-name"><svg class="ic"><use href="#i-landmark"/></svg>โครงการรัฐ</span>
+            <input id="pay-gov" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00">
+          </label>
+        </div>
+
+        <div class="pay-change"><span>เงินทอน</span><b id="pay-change">0.00</b></div>
         <p id="pay-err" class="error" role="alert"></p>
-        <div class="row">
-          <button type="submit" id="pay-confirm" class="btn btn-primary" disabled>ยืนยันรับเงิน</button>
-          <button type="button" id="pay-cancel" class="btn btn-ghost">ยกเลิก</button>
+        <div class="dlg-actions">
+          <button type="button" id="pay-cancel" class="btn">ยกเลิก</button>
+          <button type="submit" id="pay-confirm" class="btn btn-go btn-lg" disabled><svg class="ic"><use href="#i-check"/></svg>ยืนยันรับเงิน</button>
         </div>
       </form>
     </dialog>
+
     <footer id="statusbar" class="statusbar">
-      <span id="sb-cashier"></span>
-      <span id="sb-machine"></span>
-      <span id="sb-products"></span>
-      <span id="sb-pending"></span>
-      <span id="sb-warning" class="warn" hidden></span>
-      <button id="btn-sell-settings" class="btn btn-ghost small">ตั้งค่า</button>
+      <span class="sb-item" id="sb-products-wrap"><svg class="ic"><use href="#i-box"/></svg><span id="sb-products"></span></span>
+      <span class="sb-item" id="sb-pending-wrap"><svg class="ic"><use href="#i-clock"/></svg><span id="sb-pending"></span></span>
+      <span id="sb-warning" class="sb-item warn" hidden></span>
     </footer>
   </section>
 
   <!-- ตั้งค่า -->
-  <section id="view-settings" class="view" hidden>
-    <div class="card">
-      <h1>ตั้งค่า</h1>
-      <label>รหัสเครื่อง <input id="set-machine" type="text"></label>
-      <label>รายชื่อพนักงาน (หนึ่งชื่อต่อหนึ่งบรรทัด) <textarea id="set-staff" rows="5"></textarea></label>
-      <label>ชื่อร้านบนใบเสร็จ <input id="set-shop" type="text"></label>
-      <label>เครื่องพิมพ์ใบเสร็จ
-        <select id="set-printer"><option value="">(เครื่องพิมพ์เริ่มต้นของ Windows)</option></select>
-      </label>
-      <div class="row">
-        <button id="btn-print-test" class="btn">พิมพ์ทดสอบ</button>
-        <button id="btn-drawer-test" class="btn">ทดสอบเปิดลิ้นชัก (สำรอง)</button>
-      </div>
-      <label>URL รายการสินค้า (CSV) <input id="set-url" type="text"></label>
-      <fieldset>
-        <legend>จับคู่คอลัมน์ (ลำดับคอลัมน์เริ่มที่ 1, เว้นว่าง = เดาอัตโนมัติ)</legend>
-        <label>บาร์โค้ด <input id="map-barcode" type="number" min="1"></label>
-        <label>ชื่อสินค้า <input id="map-name" type="number" min="1"></label>
-        <label>หน่วยนับ <input id="map-unit" type="number" min="1"></label>
-        <label>ราคาขาย <input id="map-price" type="number" min="1"></label>
-      </fieldset>
-      <p id="set-products-info" class="muted"></p>
-      <div class="row">
-        <button id="btn-save-settings" class="btn btn-primary">บันทึก</button>
-        <button id="btn-refresh-products" class="btn">อัปเดตรายการสินค้า</button>
-        <button id="btn-open-data" class="btn btn-ghost">เปิดโฟลเดอร์ข้อมูล</button>
-        <button id="btn-close-settings" class="btn btn-ghost">กลับ</button>
-      </div>
-      <p id="set-msg" class="muted" role="status"></p>
+  <section id="view-settings" class="view view-settings" hidden>
+    <div class="settings">
+      <header class="settings-head">
+        <button id="btn-close-settings" class="btn btn-quiet"><svg class="ic"><use href="#i-back"/></svg>กลับ</button>
+        <h1>ตั้งค่า</h1>
+        <button id="btn-save-settings" class="btn btn-go"><svg class="ic"><use href="#i-check"/></svg>บันทึก</button>
+      </header>
+      <p id="set-msg" class="notice settings-msg" role="status"></p>
+
+      <section class="panel">
+        <h2>เครื่องและร้าน</h2>
+        <div class="two-col">
+          <label>รหัสเครื่อง <input id="set-machine" type="text"></label>
+          <label>ชื่อร้านบนใบเสร็จ <input id="set-shop" type="text"></label>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>พนักงาน</h2>
+        <label>รายชื่อพนักงาน (หนึ่งชื่อต่อหนึ่งบรรทัด) <textarea id="set-staff" rows="5"></textarea></label>
+      </section>
+
+      <section class="panel">
+        <h2>เครื่องพิมพ์ใบเสร็จ</h2>
+        <label>เครื่องพิมพ์
+          <select id="set-printer"><option value="">(เครื่องพิมพ์เริ่มต้นของ Windows)</option></select>
+        </label>
+        <div class="row">
+          <button id="btn-print-test" class="btn"><svg class="ic"><use href="#i-printer"/></svg>พิมพ์ทดสอบ</button>
+          <button id="btn-drawer-test" class="btn btn-quiet">ทดสอบเปิดลิ้นชัก (สำรอง)</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>รายการสินค้า</h2>
+        <p id="set-products-info" class="muted"></p>
+        <label>URL รายการสินค้า (CSV) <input id="set-url" type="text"></label>
+        <div class="row">
+          <button id="btn-refresh-products" class="btn"><svg class="ic"><use href="#i-refresh"/></svg>อัปเดตรายการสินค้า</button>
+          <button id="btn-open-data" class="btn btn-quiet"><svg class="ic"><use href="#i-folder"/></svg>เปิดโฟลเดอร์ข้อมูล</button>
+        </div>
+        <details class="adv">
+          <summary>ขั้นสูง: จับคู่คอลัมน์ (เว้นว่าง = เดาอัตโนมัติ)</summary>
+          <fieldset>
+            <legend>ลำดับคอลัมน์เริ่มที่ 1</legend>
+            <div class="two-col">
+              <label>บาร์โค้ด <input id="map-barcode" type="number" min="1"></label>
+              <label>ชื่อสินค้า <input id="map-name" type="number" min="1"></label>
+              <label>หน่วยนับ <input id="map-unit" type="number" min="1"></label>
+              <label>ราคาขาย <input id="map-price" type="number" min="1"></label>
+            </div>
+          </fieldset>
+        </details>
+      </section>
     </div>
   </section>
 

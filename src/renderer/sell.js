@@ -17,35 +17,97 @@ const Sell = {
     this.$('sell-msg').textContent = text || '';
   },
 
+  icon(id) {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('class', 'ic');
+    const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+    use.setAttribute('href', '#' + id);
+    svg.appendChild(use);
+    return svg;
+  },
+
+  // Steps strip: 1 scan -> 2 pay -> 3 receipt. Says where the sale is at a glance.
+  setStep(n) {
+    this.step = n;
+    [1, 2, 3].forEach((i) => {
+      const el = this.$('step-' + i);
+      el.classList.toggle('is-active', i === n);
+      el.classList.toggle('is-done', i < n);
+    });
+  },
+
+  // Total ticks to the new amount (instant when the user prefers reduced motion).
+  showTotal(to) {
+    const el = this.$('total');
+    const from = this.shownTotal === undefined ? to : this.shownTotal;
+    this.shownTotal = to;
+    cancelAnimationFrame(this.tickId);
+    if (from === to || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) { el.textContent = this.fmt(to); return; }
+    const t0 = performance.now();
+    const step = (t) => {
+      const k = Math.min(1, (t - t0) / 260);
+      const e = 1 - Math.pow(1 - k, 3);
+      el.textContent = this.fmt(from + (to - from) * e);
+      if (k < 1) this.tickId = requestAnimationFrame(step); else el.textContent = this.fmt(to);
+    };
+    this.tickId = requestAnimationFrame(step);
+  },
+
   render() {
     const body = this.$('cart-body');
     body.textContent = '';
+    const prev = this.prevKeys || [];
+    const keys = [];
     this.cart.forEach((l, i) => {
+      const key = l.name + '|' + l.price + '|' + l.qty;
+      keys.push(key);
       const tr = document.createElement('tr');
       if (l.manual) tr.className = 'flag-manual';
       else if (l.priceEdited) tr.className = 'flag-edited';
+      if (prev[i] !== key && prev.length) tr.classList.add('is-new');
       const tag = l.manual ? ' <span class="tag">คีย์เอง</span>' : l.priceEdited ? ' <span class="tag">แก้ราคา</span>' : '';
-      tr.innerHTML = '<td></td><td class="name"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num total-cell"></td><td></td>';
+      tr.innerHTML = '<td class="idx"></td><td class="name"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num total-cell"></td><td></td>';
       const c = tr.children;
       c[0].textContent = i + 1;
       c[1].textContent = l.name;
       c[1].insertAdjacentHTML('beforeend', tag);
       c[2].appendChild(this.numInput(l.price, 'ราคา', (v) => this.edit(Cart.setPrice, i, v), '0.01'));
-      c[3].appendChild(this.numInput(l.qty, 'จำนวน', (v) => this.edit(Cart.setQty, i, v), '1', '1'));
+      c[3].appendChild(this.qtyControl(l, i));
       c[4].appendChild(this.numInput(l.discount, 'ส่วนลด', (v) => this.edit(Cart.setDiscount, i, v), '0.01'));
       c[5].textContent = this.fmt(l.total);
       const del = document.createElement('button');
-      del.className = 'btn small'; del.textContent = 'ลบ'; del.setAttribute('aria-label', 'ลบรายการ ' + l.name);
+      del.className = 'row-del'; del.type = 'button'; del.title = 'ลบรายการนี้'; del.setAttribute('aria-label', 'ลบรายการ ' + l.name);
+      del.appendChild(this.icon('i-trash'));
       del.addEventListener('click', () => { this.cart = Cart.removeLine(this.cart, i); this.render(); this.focusScan(); });
       c[6].appendChild(del);
       body.appendChild(tr);
     });
+    this.prevKeys = keys;
     const s = Cart.cartSummary(this.cart);
-    this.$('total').textContent = this.fmt(s.total);
-    this.$('counts').textContent = `${s.itemCount} รายการ ${s.pieceCount} ชิ้น`;
+    this.showTotal(s.total);
+    this.$('counts').textContent = `${s.itemCount} รายการ · ${s.pieceCount} ชิ้น`;
     this.$('cart-empty').hidden = this.cart.length > 0;
     this.$('btn-pay').disabled = this.cart.length === 0;
     this.$('btn-clear').disabled = this.cart.length === 0;
+    const last = body.lastElementChild;
+    if (last && prev.length < keys.length) last.scrollIntoView({ block: 'nearest' });
+  },
+
+  // - [qty] + : large targets, so a mouse click never needs aiming at a tiny field.
+  qtyControl(line, i) {
+    const wrap = document.createElement('div');
+    wrap.className = 'qty';
+    const mk = (id, label, delta) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'qty-btn'; b.setAttribute('aria-label', label);
+      b.appendChild(this.icon(id));
+      b.addEventListener('click', () => this.edit(Cart.setQty, i, Math.max(1, Number(line.qty) + delta)));
+      return b;
+    };
+    wrap.appendChild(mk('i-minus', 'ลดจำนวน', -1));
+    wrap.appendChild(this.numInput(line.qty, 'จำนวน', (v) => this.edit(Cart.setQty, i, v), '1', '1'));
+    wrap.appendChild(mk('i-plus', 'เพิ่มจำนวน', 1));
+    return wrap;
   },
 
   numInput(value, label, onCommit, step, min) {
@@ -67,6 +129,7 @@ const Sell = {
   },
 
   add(product) {
+    this.setStep(1);
     this.cart = Cart.addProduct(this.cart, product);
     this.hideResults();
     this.message('');
@@ -131,6 +194,7 @@ const Sell = {
       return;
     }
     this.$('dlg-manual').close();
+    this.setStep(1);
     this.render();
     this.focusScan();
   },
@@ -172,7 +236,7 @@ const Sell = {
     });
     this.$('form-manual').addEventListener('submit', (e) => this.submitManual(e));
     this.$('man-cancel').addEventListener('click', () => { this.$('dlg-manual').close(); this.focusScan(); });
-    this.$('form-clear').addEventListener('submit', () => { this.cart = []; this.render(); });
+    this.$('form-clear').addEventListener('submit', () => { this.cart = []; this.setStep(1); this.render(); });
     this.$('clear-no').addEventListener('click', () => this.$('dlg-clear').close());
     this.$('btn-pay').addEventListener('click', () => Pay.open());
     this.$('btn-clear').addEventListener('click', () => this.clear());
@@ -189,5 +253,5 @@ const Sell = {
   },
 };
 
-App.onShowSell = () => { Sell.render(); Sell.focusScan(); };
+App.onShowSell = () => { Sell.setStep(1); Sell.render(); Sell.focusScan(); };
 Sell.init();

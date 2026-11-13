@@ -46,6 +46,8 @@
     window.addEventListener('load', () => setTimeout(async () => {
       document.querySelector('#staff-list button').click();
       await new Promise((r) => setTimeout(r, 200));
+      if (demo === 'empty') return;
+      if (demo === 'settings') { document.getElementById('btn-sell-settings').click(); return; }
       const scan = document.getElementById('scan');
       for (const code of ['8850000000001', '8850000000001', '8850000000002', '1234567890123']) {
         scan.value = code;
