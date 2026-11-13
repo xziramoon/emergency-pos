@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>POS ฉุกเฉิน</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- เลือกพนักงาน -->
+  <section id="view-staff" class="view" hidden>
+    <div class="card center">
+      <h1>POS ฉุกเฉิน</h1>
+      <p class="muted">เลือกชื่อพนักงาน</p>
+      <div id="staff-list" class="staff-grid"></div>
+      <p id="staff-empty" class="muted" hidden>ยังไม่มีรายชื่อพนักงาน กรุณาเพิ่มในหน้าตั้งค่า</p>
+      <button id="btn-open-settings" class="btn btn-ghost">ตั้งค่า</button>
+    </div>
+  </section>
+
+  <!-- หน้าขาย (เพิ่มใน Task 6) -->
+  <section id="view-sell" class="view" hidden>
+    <div id="sell-root" class="sell">
+      <div class="sell-main">
+        <div class="scan-wrap">
+          <input id="scan" type="text" autocomplete="off" spellcheck="false" placeholder="ยิงบาร์โค้ด หรือพิมพ์ชื่อสินค้า แล้วกด Enter">
+          <ul id="results" class="results" hidden></ul>
+        </div>
+        <div class="cart-scroll">
+          <table class="cart">
+            <thead>
+              <tr><th>#</th><th>สินค้า</th><th class="num">ราคา</th><th class="num">จำนวน</th><th class="num">ส่วนลด</th><th class="num">รวม</th><th></th></tr>
+            </thead>
+            <tbody id="cart-body"></tbody>
+          </table>
+          <p id="cart-empty" class="muted center-text">ยังไม่มีรายการ ยิงบาร์โค้ดเพื่อเริ่มขาย</p>
+        </div>
+      </div>
+      <aside class="sell-side">
+        <div class="total-box">
+          <div class="muted">ยอดรวม</div>
+          <div id="total" class="total">0.00</div>
+          <div id="counts" class="muted">0 รายการ 0 ชิ้น</div>
+        </div>
+        <button id="btn-pay" class="btn btn-primary big" disabled>รับเงิน (F11)</button>
+        <button id="btn-clear" class="btn big" disabled>ล้างบิล</button>
+        <button id="btn-reprint" class="btn big" hidden>พิมพ์ใบล่าสุดซ้ำ</button>
+        <p id="sell-msg" class="notice" role="status"></p>
+      </aside>
+    </div>
+
+    <dialog id="dlg-clear">
+      <form method="dialog" id="form-clear">
+        <h2>ล้างบิลนี้ทั้งหมด?</h2>
+        <p class="muted">รายการทั้งหมดในบิลปัจจุบันจะถูกลบ</p>
+        <div class="row">
+          <button type="submit" id="clear-yes" class="btn btn-primary">ล้างบิล</button>
+          <button type="button" id="clear-no" class="btn btn-ghost">ไม่ล้าง</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="dlg-manual">
+      <form method="dialog" id="form-manual">
+        <h2>เพิ่มสินค้าเอง</h2>
+        <p id="manual-hint" class="muted"></p>
+        <label>ชื่อสินค้า <input id="man-name" type="text" required></label>
+        <label>ราคา (บาท) <input id="man-price" type="number" min="0" step="0.01" required></label>
+        <label>จำนวน <input id="man-qty" type="number" min="1" step="1" value="1" required></label>
+        <p id="man-err" class="error" role="alert"></p>
+        <div class="row">
+          <button type="submit" class="btn btn-primary">เพิ่มเข้าบิล</button>
+          <button type="button" id="man-cancel" class="btn btn-ghost">ยกเลิก</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="dlg-pay">
+      <form method="dialog" id="form-pay">
+        <h2>รับเงิน</h2>
+        <div class="pay-total"><span class="muted">ยอดบิล</span> <b id="pay-total">0.00</b></div>
+        <label>เงินสด <input id="pay-cash" type="number" min="0" step="0.01" inputmode="decimal"></label>
+        <label>เงินโอน / QR <input id="pay-transfer" type="number" min="0" step="0.01" inputmode="decimal"></label>
+        <label>โครงการรัฐ <input id="pay-gov" type="number" min="0" step="0.01" inputmode="decimal"></label>
+        <div class="row">
+          <button type="button" id="pay-exact" class="btn">เงินสดพอดี</button>
+          <button type="button" id="pay-full-transfer" class="btn">โอนเต็มจำนวน</button>
+        </div>
+        <div class="pay-change"><span class="muted">เงินทอน</span> <b id="pay-change">0.00</b></div>
+        <p id="pay-err" class="error" role="alert"></p>
+        <div class="row">
+          <button type="submit" id="pay-confirm" class="btn btn-primary" disabled>ยืนยันรับเงิน</button>
+          <button type="button" id="pay-cancel" class="btn btn-ghost">ยกเลิก</button>
+        </div>
+      </form>
+    </dialog>
+    <footer id="statusbar" class="statusbar">
+      <span id="sb-cashier"></span>
+      <span id="sb-machine"></span>
+      <span id="sb-products"></span>
+      <span id="sb-pending"></span>
+      <span id="sb-warning" class="warn" hidden></span>
+      <button id="btn-sell-settings" class="btn btn-ghost small">ตั้งค่า</button>
+    </footer>
+  </section>
+
+  <!-- ตั้งค่า -->
+  <section id="view-settings" class="view" hidden>
+    <div class="card">
+      <h1>ตั้งค่า</h1>
+      <label>รหัสเครื่อง <input id="set-machine" type="text"></label>
+      <label>รายชื่อพนักงาน (หนึ่งชื่อต่อหนึ่งบรรทัด) <textarea id="set-staff" rows="5"></textarea></label>
+      <label>ชื่อร้านบนใบเสร็จ <input id="set-shop" type="text"></label>
+      <label>เครื่องพิมพ์ใบเสร็จ
+        <select id="set-printer"><option value="">(เครื่องพิมพ์เริ่มต้นของ Windows)</option></select>
+      </label>
+      <div class="row">
+        <button id="btn-print-test" class="btn">พิมพ์ทดสอบ</button>
+        <button id="btn-drawer-test" class="btn">ทดสอบเปิดลิ้นชัก (สำรอง)</button>
+      </div>
+      <label>URL รายการสินค้า (CSV) <input id="set-url" type="text"></label>
+      <fieldset>
+        <legend>จับคู่คอลัมน์ (ลำดับคอลัมน์เริ่มที่ 1, เว้นว่าง = เดาอัตโนมัติ)</legend>
+        <label>บาร์โค้ด <input id="map-barcode" type="number" min="1"></label>
+        <label>ชื่อสินค้า <input id="map-name" type="number" min="1"></label>
+        <label>หน่วยนับ <input id="map-unit" type="number" min="1"></label>
+        <label>ราคาขาย <input id="map-price" type="number" min="1"></label>
+      </fieldset>
+      <p id="set-products-info" class="muted"></p>
+      <div class="row">
+        <button id="btn-save-settings" class="btn btn-primary">บันทึก</button>
+        <button id="btn-refresh-products" class="btn">อัปเดตรายการสินค้า</button>
+        <button id="btn-open-data" class="btn btn-ghost">เปิดโฟลเดอร์ข้อมูล</button>
+        <button id="btn-close-settings" class="btn btn-ghost">กลับ</button>
+      </div>
+      <p id="set-msg" class="muted" role="status"></p>
+    </div>
+  </section>
+
+  <script src="../shared/bill.js"></script>
+  <script src="../shared/cart.js"></script>
+  <script src="settings.js"></script>
+  <script src="app.js"></script>
+  <script src="sell.js"></script>
+  <script src="pay.js"></script>
+</body>
+</html>

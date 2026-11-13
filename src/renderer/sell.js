@@ -1,0 +1,193 @@
+'use strict';
+// Sell screen (spec 6.2). Pure cart math lives in ../shared/cart.js.
+const Sell = {
+  cart: [],
+  $: (id) => document.getElementById(id),
+  fmt: (n) => Number(n).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+
+  modalOpen() {
+    return !!document.querySelector('dialog[open]');
+  },
+
+  focusScan() {
+    if (!this.$('view-sell').hidden && !this.modalOpen()) this.$('scan').focus();
+  },
+
+  message(text) {
+    this.$('sell-msg').textContent = text || '';
+  },
+
+  render() {
+    const body = this.$('cart-body');
+    body.textContent = '';
+    this.cart.forEach((l, i) => {
+      const tr = document.createElement('tr');
+      if (l.manual) tr.className = 'flag-manual';
+      else if (l.priceEdited) tr.className = 'flag-edited';
+      const tag = l.manual ? ' <span class="tag">คีย์เอง</span>' : l.priceEdited ? ' <span class="tag">แก้ราคา</span>' : '';
+      tr.innerHTML = '<td></td><td class="name"></td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num total-cell"></td><td></td>';
+      const c = tr.children;
+      c[0].textContent = i + 1;
+      c[1].textContent = l.name;
+      c[1].insertAdjacentHTML('beforeend', tag);
+      c[2].appendChild(this.numInput(l.price, 'ราคา', (v) => this.edit(Cart.setPrice, i, v), '0.01'));
+      c[3].appendChild(this.numInput(l.qty, 'จำนวน', (v) => this.edit(Cart.setQty, i, v), '1', '1'));
+      c[4].appendChild(this.numInput(l.discount, 'ส่วนลด', (v) => this.edit(Cart.setDiscount, i, v), '0.01'));
+      c[5].textContent = this.fmt(l.total);
+      const del = document.createElement('button');
+      del.className = 'btn small'; del.textContent = 'ลบ'; del.setAttribute('aria-label', 'ลบรายการ ' + l.name);
+      del.addEventListener('click', () => { this.cart = Cart.removeLine(this.cart, i); this.render(); this.focusScan(); });
+      c[6].appendChild(del);
+      body.appendChild(tr);
+    });
+    const s = Cart.cartSummary(this.cart);
+    this.$('total').textContent = this.fmt(s.total);
+    this.$('counts').textContent = `${s.itemCount} รายการ ${s.pieceCount} ชิ้น`;
+    this.$('cart-empty').hidden = this.cart.length > 0;
+    this.$('btn-pay').disabled = this.cart.length === 0;
+    this.$('btn-clear').disabled = this.cart.length === 0;
+  },
+
+  numInput(value, label, onCommit, step, min) {
+    const inp = document.createElement('input');
+    inp.type = 'number'; inp.value = value; inp.step = step; inp.className = 'cell-input';
+    if (min !== undefined) inp.min = min;
+    inp.setAttribute('aria-label', label);
+    // An emptied field means "no change" (Number('') would otherwise become 0).
+    const commit = () => { if (inp.value.trim() === '') { this.render(); return; } onCommit(Number(inp.value)); };
+    inp.addEventListener('change', commit);
+    inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); inp.blur(); } });
+    return inp;
+  },
+
+  edit(fn, idx, value) {
+    this.cart = fn(this.cart, idx, value);
+    this.render();
+    this.focusScan();
+  },
+
+  add(product) {
+    this.cart = Cart.addProduct(this.cart, product);
+    this.hideResults();
+    this.message('');
+    this.render();
+    this.focusScan();
+  },
+
+  hideResults() {
+    const r = this.$('results');
+    r.hidden = true; r.textContent = '';
+  },
+
+  showResults(items) {
+    const r = this.$('results');
+    r.textContent = '';
+    items.forEach((p) => {
+      const li = document.createElement('li');
+      li.tabIndex = 0;
+      li.textContent = `${p.name} (${p.unit}) — ${this.fmt(p.price)}`;
+      li.addEventListener('click', () => { this.$('scan').value = ''; this.add(p); });
+      li.addEventListener('keydown', (e) => { if (e.key === 'Enter') li.click(); });
+      r.appendChild(li);
+    });
+    r.hidden = items.length === 0;
+  },
+
+  async onScan() {
+    const input = this.$('scan');
+    const text = input.value.trim();
+    input.value = '';
+    this.hideResults();
+    if (!text) return;
+    const found = await window.api.findByBarcode(text);
+    if (found) return this.add(found);
+    if (/^[0-9A-Za-z\-]+$/.test(text) && /\d/.test(text) && text.length >= 6) return this.openManual(text);
+    const list = await window.api.searchByName(text);
+    if (list.length === 1) { this.add(list[0]); return; }
+    if (list.length > 1) { this.showResults(list); this.message('เลือกสินค้าจากรายการ'); return; }
+    this.openManual('', text);
+  },
+
+  openManual(barcode, name) {
+    this.manualBarcode = barcode || '';
+    this.$('manual-hint').textContent = barcode ? `ไม่พบบาร์โค้ด ${barcode} ในรายการสินค้า` : 'ไม่พบสินค้านี้ในรายการ';
+    this.$('man-name').value = name || '';
+    this.$('man-price').value = '';
+    this.$('man-qty').value = '1';
+    this.$('man-err').textContent = '';
+    this.$('dlg-manual').showModal();
+    (name ? this.$('man-price') : this.$('man-name')).focus();
+  },
+
+  submitManual(e) {
+    e.preventDefault();
+    try {
+      this.cart = Cart.addManual(this.cart, {
+        barcode: this.manualBarcode, name: this.$('man-name').value,
+        price: Number(this.$('man-price').value), qty: Number(this.$('man-qty').value),
+      });
+    } catch (err) {
+      this.$('man-err').textContent = err.message;
+      return;
+    }
+    this.$('dlg-manual').close();
+    this.render();
+    this.focusScan();
+  },
+
+  clear() {
+    if (this.cart.length === 0) return;
+    // A <dialog>, not window.confirm(): confirm() can leave inputs unable to type in Electron on Windows.
+    this.$('dlg-clear').showModal();
+    this.$('clear-no').focus();
+  },
+
+  // The last-sale reprint button is always available after a sale (paper jam, out of paper...);
+  // `urgent` only changes the emphasis when the automatic print just failed.
+  showReprint(urgent) {
+    const b = this.$('btn-reprint');
+    b.hidden = !this.lastSaved;
+    b.classList.toggle('btn-primary', !!urgent);
+  },
+
+  async reprint() {
+    if (!this.lastSaved) return;
+    this.message('กำลังพิมพ์ซ้ำ...');
+    const r = await window.api.printReceipt(this.lastSaved);
+    this.message(r.ok ? 'พิมพ์ซ้ำแล้ว' : 'พิมพ์ไม่สำเร็จ: ' + r.error);
+    this.focusScan();
+  },
+
+  newBill(message) {
+    this.cart = [];
+    this.message(message);
+    this.render();
+    this.focusScan();
+  },
+
+  init() {
+    this.$('scan').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); this.onScan(); }
+      if (e.key === 'Escape') { this.hideResults(); }
+    });
+    this.$('form-manual').addEventListener('submit', (e) => this.submitManual(e));
+    this.$('man-cancel').addEventListener('click', () => { this.$('dlg-manual').close(); this.focusScan(); });
+    this.$('form-clear').addEventListener('submit', () => { this.cart = []; this.render(); });
+    this.$('clear-no').addEventListener('click', () => this.$('dlg-clear').close());
+    this.$('btn-pay').addEventListener('click', () => Pay.open());
+    this.$('btn-clear').addEventListener('click', () => this.clear());
+    this.$('btn-reprint').addEventListener('click', () => this.reprint());
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'F11' && !this.$('view-sell').hidden && !this.modalOpen()) { e.preventDefault(); Pay.open(); }
+    });
+    // Keep focus in the scan field: after any dialog closes or a click on empty space.
+    document.addEventListener('close', () => setTimeout(() => this.focusScan(), 0), true);
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('input, button, li, dialog, select, textarea')) this.focusScan();
+    });
+    this.render();
+  },
+};
+
+App.onShowSell = () => { Sell.render(); Sell.focusScan(); };
+Sell.init();

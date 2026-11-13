@@ -1,0 +1,52 @@
+{
+  "name": "emergency-pos",
+  "version": "0.2.0",
+  "description": "POS ฉุกเฉิน - ร้านอึ้งลักเส็ง",
+  "main": "src/main/main.js",
+  "scripts": {
+    "test": "node --test \"test/**/*.test.js\"",
+    "harness:ui": "node tools/harness-ui.js",
+    "start": "echo \"Do not run electron from source; use harness:ui or the built exe\" && exit 1",
+    "dist": "electron-builder --win",
+    "dist:dir": "electron-builder --win --dir"
+  },
+  "build": {
+    "appId": "com.ungluckseng.emergencypos",
+    "productName": "POS ฉุกเฉิน",
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis",
+      "requestedExecutionLevel": "requireAdministrator"
+    },
+    "directories": {
+      "output": "dist"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "xziramoon",
+        "repo": "emergency-pos"
+      }
+    ],
+    "nsis": {
+      "oneClick": true,
+      "perMachine": true,
+      "runAfterFinish": false
+    }
+  },
+  "devDependencies": {
+    "electron": "^45.3.1",
+    "electron-builder": "^26.18.0"
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.11"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xziramoon/emergency-pos.git"
+  },
+  "license": "UNLICENSED"
+}
