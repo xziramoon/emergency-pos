@@ -5,6 +5,7 @@ const { refreshProducts } = require('./products-store');
 const { findByBarcode, searchByName } = require('../shared/products');
 const { confirmAndPrint } = require('./print');
 const { buildReceipt, renderReceiptHtml } = require('../shared/receipt');
+const billops = require('./billops');
 
 const CHANNELS = {
   getSettings: 'settings:get',
@@ -25,10 +26,15 @@ const CHANNELS = {
   installUpdate: 'update:install',
   getUpdateStatus: 'update:get',
   checkUpdate: 'update:check',
+  listBills: 'bills:list',
+  sendBill: 'bills:send',
+  resumeBill: 'bills:resume',
 };
 
 // Main -> renderer push (not an invoke channel): { state: 'idle'|'downloading'|'ready', version }
 const UPDATE_EVENT = 'update:status';
+// Main -> renderer push while the typer runs: { date, seq, typed, total }
+const SEND_PROGRESS_EVENT = 'send:progress';
 
 // ctx: { dir, state:{products}, reloadProducts(), getPrinters(), openFolder(), printHtml(html, device), openDrawerRaw(device) }
 function register(ipc, ctx) {
@@ -78,6 +84,26 @@ function register(ipc, ctx) {
   });
   ipc.handle(CHANNELS.checkUpdate, () => asResult(() => ctx.checkUpdate()));
   ipc.handle(CHANNELS.openDataFolder, () => { ctx.openFolder(); });
+
+  // Bills screen (spec 6.5). filter: 'open' (not confirmed/void), 'sent' (typed/confirmed), 'void', 'all'. Oldest first.
+  ipc.handle(CHANNELS.listBills, (_e, filter = 'open') => {
+    const keep = {
+      open: (b) => b.status !== 'confirmed' && b.status !== 'void',
+      sent: (b) => b.status === 'typed' || b.status === 'confirmed',
+      void: (b) => b.status === 'void',
+      all: () => true,
+    }[filter] || (() => true);
+    const out = [];
+    for (const date of store.allDates(ctx.dir)) for (const b of store.listBills(ctx.dir, date)) if (keep(b)) out.push({ ...b, date });
+    return out.sort((a, b) => (a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0));
+  });
+  const sendOpts = (date, seq) => ({
+    dir: ctx.dir, date, seq, settings: store.loadSettings(ctx.dir), script: ctx.typerScript, runTyper: ctx.runTyper,
+    notify: (p) => { if (ctx.notify) ctx.notify(SEND_PROGRESS_EVENT, p); },
+  });
+  const afterSend = (r, date, seq) => { if (r.ok && r.done && ctx.onTyped) ctx.onTyped(date, seq, r.bill); return r; };
+  ipc.handle(CHANNELS.sendBill, async (_e, date, seq) => afterSend(await billops.sendBill(sendOpts(date, seq)), date, seq));
+  ipc.handle(CHANNELS.resumeBill, async (_e, date, seq) => afterSend(await billops.resumeBill(sendOpts(date, seq)), date, seq));
 }
 
-module.exports = { CHANNELS, UPDATE_EVENT, register };
+module.exports = { CHANNELS, UPDATE_EVENT, SEND_PROGRESS_EVENT, register };

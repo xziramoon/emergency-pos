@@ -15,6 +15,25 @@
   let updatedAt = new Date().toISOString();
   const strip = (c) => String(c).trim().replace(/^0+/, '');
 
+  let progressCb = () => {};
+  const codesOf = (b) => b.lines.filter((l) => !l.manual).flatMap((l) => Array(l.qty).fill(l.barcode));
+  // ?stop=N makes the mock stop after N barcodes (to see the "stopped midway" result).
+  async function mockSend(seq, resume) {
+    const b = bills.find((x) => x.seq === seq);
+    const all = codesOf(b);
+    const from = resume ? b.sentCount : 0;
+    const stopAt = Number(new URLSearchParams(location.search).get('stop')) || 0;
+    b.status = 'sending';
+    let n = from;
+    for (const c of all.slice(from)) {
+      if (stopAt && n >= stopAt && !resume) { b.status = 'pending'; b.sentCount = n; return { ok: true, done: false, typed: n, total: all.length, lastBarcode: all[n - 1], reason: 'foreground-changed', message: BillState.describeStop('foreground-changed', n, all[n - 1]), bill: b }; }
+      await new Promise((r) => setTimeout(r, 250));
+      n++; b.sentCount = n; progressCb({ date: b.createdAt.slice(0, 10), seq, typed: n, total: all.length });
+    }
+    b.status = 'typed'; b.sentAt = new Date().toISOString();
+    return { ok: true, done: true, typed: n, total: all.length, bill: b };
+  }
+
   window.api = {
     getSettings: async () => structuredClone(settings),
     saveSettings: async (s) => { settings = structuredClone(s); return s; },
@@ -42,6 +61,15 @@
     getUpdateStatus: async () => ({ state: new URLSearchParams(location.search).get('demo') === 'update' ? 'ready' : 'idle', version: '0.3.0', current: '0.2.0' }),
     checkUpdate: async () => ({ ok: true }),
     onUpdateStatus: () => {},
+    // ---- Stage 3 stubs: bills list + simulated typing (never touches a real POS) ----
+    listBills: async (filter = 'open') => {
+      const keep = { open: (b) => b.status !== 'confirmed' && b.status !== 'void', sent: (b) => b.status === 'typed' || b.status === 'confirmed', void: (b) => b.status === 'void', all: () => true }[filter];
+      return bills.filter(keep).map((b) => ({ ...b, date: b.createdAt.slice(0, 10) }));
+    },
+    sendBill: async (date, seq) => mockSend(seq, false),
+    resumeBill: async (date, seq) => mockSend(seq, true),
+    onSendProgress: (cb) => { progressCb = cb; },
+    onWindowFocus: () => {},
   };
 
   // ?demo=sell logs in and scans two items; ?demo=pay also opens the payment dialog (for screenshots).
@@ -51,6 +79,20 @@
       document.querySelector('#staff-list button').click();
       await new Promise((r) => setTimeout(r, 200));
       if (demo === 'empty') return;
+      if (demo === 'pending') {
+        const mk = (n, status, extra) => ({ seq: n, machine: 'POS02', createdAt: '2026-11-14T' + String(8 + n).padStart(2, '0') + ':' + String(10 + n).padStart(2, '0') + ':00+07:00', cashier: n % 2 ? 'ตั้น' : 'แอน', total: 100 + n * 37, change: 0, payments: [{ method: 'cash', amount: 100 + n * 37 }], status, sentCount: 0, sentAt: null, confirmedAt: null, void: null,
+          lines: [{ barcode: '8850000000001', name: 'อะยัม แมคเคอเรล 230กรัม', qty: 2, price: 58, discount: 0, total: 116, manual: false }, { barcode: '8850000000002', name: 'น้ำดื่ม 600มล.', qty: 3, price: 7, discount: 0, total: 21, manual: false }], ...extra });
+        bills.push(mk(1, 'pending'), mk(2, 'pending', { sentCount: 3, lines: [{ barcode: '8850000000001', name: 'อะยัม', qty: 4, price: 58, discount: 0, total: 232, manual: false }, { barcode: '', name: 'ของฝาก', qty: 1, price: 25, discount: 0, total: 25, manual: true }] }), mk(3, 'typed', { payments: [{ method: 'cash', amount: 100 }, { method: 'transfer', amount: 111 }] }), mk(4, 'flagged', { flagNote: 'POS ขึ้นยอดต่างกัน 5 บาท' }), mk(5, 'pending', { lines: [{ barcode: '8850000000002', name: 'น้ำดื่ม (แก้ราคา)', qty: 1, price: 5, discount: 0, total: 5, manual: false, priceEdited: true }] }));
+        document.getElementById('btn-pending').click();
+        const act = new URLSearchParams(location.search).get('act');
+        if (act) {
+          const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+          await sleep(150); document.querySelector('#pend-body .btn-go').click();
+          if (act !== 'confirm') { await sleep(150); document.getElementById('send-go').click(); }
+          if (act === 'sending') await sleep(500);
+        }
+        return;
+      }
       if (demo === 'settings') { document.getElementById('btn-sell-settings').click(); return; }
       const scan = document.getElementById('scan');
       for (const code of ['8850000000001', '8850000000001', '8850000000002', '1234567890123']) {

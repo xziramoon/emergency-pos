@@ -22,6 +22,10 @@ contextBridge.exposeInMainWorld('api', {
   installUpdate: call('update:install'),
   getUpdateStatus: call('update:get'),
   checkUpdate: call('update:check'),
+  listBills: call('bills:list'),
+  sendBill: call('bills:send'),
+  resumeBill: call('bills:resume'),
+  onSendProgress: (cb) => ipcRenderer.on('send:progress', (_e, p) => cb(p)),
   onUpdateStatus: (cb) => ipcRenderer.on('update:status', (_e, s) => cb(s)),
   onWindowFocus: (cb) => ipcRenderer.on('window:focus', () => cb()),
 });

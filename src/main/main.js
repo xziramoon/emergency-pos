@@ -5,6 +5,7 @@ const store = require('./store');
 const { loadProducts, refreshProducts } = require('./products-store');
 const { register } = require('./ipc');
 const { printHtml, openDrawerRaw } = require('./print');
+const { runTyper } = require('./typer');
 const { setupAutoUpdate } = require('./updater');
 
 if (!app.requestSingleInstanceLock()) {
@@ -39,6 +40,10 @@ if (!app.requestSingleInstanceLock()) {
         }
       },
       openDrawerRaw,
+      // Typer script is not inside the asar (powershell cannot run from it): see extraResources in package.json.
+      typerScript: app.isPackaged ? path.join(process.resourcesPath, 'resources', 'pos-type.ps1') : path.join(__dirname, '../../resources/pos-type.ps1'),
+      runTyper,
+      notify: (ch, payload) => { if (win && !win.isDestroyed()) win.webContents.send(ch, payload); },
       version: app.getVersion(),
       installUpdate: () => require('electron-updater').autoUpdater.quitAndInstall(false, true),
       checkUpdate: async () => {

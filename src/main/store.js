@@ -124,7 +124,10 @@ function recoverSending(dir) {
     const bills = listBills(dir, date);
     let changed = false;
     for (const b of bills) {
-      if (b.status === 'sending') { b.status = 'pending'; changed = true; n++; }
+      if (b.status === 'sending') {
+        b.status = 'pending'; changed = true; n++;
+        if (b.sentCount > 0) warnings.push(`บิล ${date} #${b.seq} ค้างตอนกำลังส่ง (พิมพ์เข้า POS หลักไปแล้ว ${b.sentCount} รายการ) ตรวจรายการสุดท้ายใน POS หลักก่อนส่งต่อ`);
+      }
     }
     if (changed) atomicWriteJson(billsFile(dir, date), bills);
   }

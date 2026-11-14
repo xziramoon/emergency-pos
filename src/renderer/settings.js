@@ -10,6 +10,8 @@ const Settings = {
     this.$('set-staff').value = s.staff.join('\n');
     this.$('set-shop').value = s.shopName;
     this.$('set-url').value = s.productsUrl;
+    this.$('set-delay').value = s.delayMs;
+    this.$('set-window').value = s.windowLike;
     for (const k of ['barcode', 'name', 'unit', 'price']) {
       this.$('map-' + k).value = s.columnMap && s.columnMap[k] >= 0 ? s.columnMap[k] + 1 : '';
     }
@@ -67,6 +69,8 @@ const Settings = {
       shopName: this.$('set-shop').value.trim() || cur.shopName,
       productsUrl: this.$('set-url').value.trim() || cur.productsUrl,
       printer: this.$('set-printer').value,
+      delayMs: Math.max(100, parseInt(this.$('set-delay').value, 10) || cur.delayMs),
+      windowLike: this.$('set-window').value.trim() || cur.windowLike,
       columnMap: this.readColumnMap(),
     });
     this.$('set-msg').textContent = 'บันทึกแล้ว';

@@ -3,7 +3,7 @@
 const App = {
   cashier: null,
   settings: null,
-  views: ['staff', 'sell', 'settings'],
+  views: ['staff', 'sell', 'pending', 'settings'],
 
   show(name) {
     for (const v of this.views) document.getElementById('view-' + v).hidden = v !== name;
@@ -23,6 +23,7 @@ const App = {
     const when = st.updatedAt ? new Date(st.updatedAt).toLocaleString('th-TH') : 'ยังไม่เคยอัปเดต';
     sp.textContent = st.count ? `สินค้า ${st.count.toLocaleString('th-TH')} รายการ · อัปเดต ${when}${st.stale ? ' (ข้อมูลเก่า ควรอัปเดต)' : ''}` : 'ยังไม่มีรายการสินค้า: ไปที่ ตั้งค่า > URL รายการสินค้า';
     sp.className = st.stale ? 'warn' : '';
+    const pc = document.getElementById('pending-count'); pc.textContent = pend.length; pc.hidden = pend.length === 0;
     document.getElementById('sb-pending').textContent = pend.length ? `บิลรอส่งเข้า POS หลัก ${pend.length} บิล` : 'ไม่มีบิลค้าง';
   },
 
