@@ -71,12 +71,14 @@ const Pending = {
         } else {
           act.appendChild(this.btn('ส่งเข้า POS หลัก', b === firstPending ? 'btn-go' : '', () => this.askSend(b, false)));
         }
+      } else if (b.status === 'typed') {
+        act.appendChild(this.btn('เทียบยอด', 'btn-go', () => window.api.openReconcile(b.date, b.seq)));
       } else if (b.status === 'flagged') {
         act.appendChild(this.btn('ส่งใหม่', '', () => this.askSend(b, false)));
       }
       act.appendChild(this.btn('ดู', 'btn-quiet', () => this.showBill(b)));
       if (b.status !== 'void') act.appendChild(this.btn('พิมพ์ซ้ำ', 'btn-quiet', () => this.reprint(b)));
-      if (this.hooks && this.hooks.extraActions) this.hooks.extraActions(b, act, this);
+      if (['pending', 'typed', 'flagged'].includes(b.status)) act.appendChild(this.btn('ยกเลิกบิล', 'btn-quiet', () => this.askVoid(b)));
       tr.appendChild(act);
       body.appendChild(tr);
     }
@@ -167,6 +169,28 @@ const Pending = {
     this.$('dlg-bill').showModal();
   },
 
+  // ---- void (spec 6.8): never deleted, needs a reason ----
+  askVoid(b) {
+    this.target = { bill: b };
+    this.$('void-title').textContent = `ยกเลิกบิล #${b.seq} ยอด ${this.fmt(b.total)} บาท?`;
+    this.$('void-reason').value = '';
+    this.$('void-err').textContent = '';
+    this.$('dlg-void').showModal();
+    this.$('void-reason').focus();
+  },
+
+  async doVoid() {
+    const b = this.target.bill;
+    const reason = this.$('void-reason').value.trim();
+    if (!reason) { this.$('void-err').textContent = 'ต้องใส่เหตุผลที่ยกเลิกบิล'; return; }
+    const r = await window.api.voidBill(b.date, b.seq, { by: App.cashier, reason });
+    if (!r.ok) { this.$('void-err').textContent = r.error; return; }
+    this.$('dlg-void').close();
+    this.$('pend-msg').textContent = `ยกเลิกบิล #${b.seq} แล้ว (เก็บไว้ในแท็บ "ยกเลิก")`;
+    await this.load();
+    App.refreshStatus();
+  },
+
   async reprint(b) {
     this.$('pend-msg').textContent = 'กำลังพิมพ์ซ้ำ...';
     const r = await window.api.printReceipt(b);
@@ -185,6 +209,10 @@ const Pending = {
     this.$('result-resume').addEventListener('click', () => { this.$('dlg-result').close(); this.askSend(this.target.bill, true); });
     this.$('bill-close').addEventListener('click', () => this.$('dlg-bill').close());
     window.api.onSendProgress((p) => this.onProgress(p));
+    this.$('form-void').addEventListener('submit', (e) => { e.preventDefault(); this.doVoid(); });
+    this.$('void-no').addEventListener('click', () => this.$('dlg-void').close());
+    // The reconcile window is a separate window: refresh when it confirms/flags a bill.
+    window.api.onBillsChanged(() => { App.refreshStatus(); if (!this.$('view-pending').hidden) this.load(); });
   },
 };
 Pending.init();

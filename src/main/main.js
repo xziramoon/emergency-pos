@@ -6,6 +6,7 @@ const { loadProducts, refreshProducts } = require('./products-store');
 const { register } = require('./ipc');
 const { printHtml, openDrawerRaw } = require('./print');
 const { runTyper } = require('./typer');
+const { screen } = require('electron');
 const { setupAutoUpdate } = require('./updater');
 
 if (!app.requestSingleInstanceLock()) {
@@ -14,6 +15,25 @@ if (!app.requestSingleInstanceLock()) {
   const dir = app.getPath('userData');
   const state = { products: null, update: { state: 'idle' } };
   let win = null;
+
+  // Small always-on-top window for comparing totals with the main POS (spec 6.7). Shown without taking focus
+  // so the cashier can keep working in Sea & Hill; it sits in the top-right corner (draggable).
+  let reconcileWin = null;
+  function openReconcile(date, seq) {
+    if (reconcileWin && !reconcileWin.isDestroyed()) reconcileWin.close();
+    const wa = screen.getPrimaryDisplay().workArea;
+    const w = 380; const h = 720;
+    reconcileWin = new BrowserWindow({
+      width: w, height: h, x: wa.x + wa.width - w - 12, y: wa.y + 12,
+      show: false, alwaysOnTop: true, autoHideMenuBar: true, minimizable: false, maximizable: false, title: 'เทียบยอด',
+      webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true },
+    });
+    reconcileWin.setAlwaysOnTop(true, 'floating');
+    reconcileWin.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+    reconcileWin.webContents.on('will-navigate', (e) => e.preventDefault());
+    reconcileWin.loadFile(path.join(__dirname, '../renderer/reconcile.html'), { query: { date, seq: String(seq) } });
+    reconcileWin.once('ready-to-show', () => reconcileWin.showInactive());
+  }
 
   const reloadProducts = () => { state.products = loadProducts(dir); };
 
@@ -43,6 +63,8 @@ if (!app.requestSingleInstanceLock()) {
       // Typer script is not inside the asar (powershell cannot run from it): see extraResources in package.json.
       typerScript: app.isPackaged ? path.join(process.resourcesPath, 'resources', 'pos-type.ps1') : path.join(__dirname, '../../resources/pos-type.ps1'),
       runTyper,
+      openReconcile: (date, seq) => openReconcile(date, seq),
+      onTyped: (date, seq) => openReconcile(date, seq),
       notify: (ch, payload) => { if (win && !win.isDestroyed()) win.webContents.send(ch, payload); },
       version: app.getVersion(),
       installUpdate: () => require('electron-updater').autoUpdater.quitAndInstall(false, true),

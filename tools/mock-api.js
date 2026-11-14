@@ -16,6 +16,11 @@
   const strip = (c) => String(c).trim().replace(/^0+/, '');
 
   let progressCb = () => {};
+  // The reconcile page is a separate document in the harness, so give it a sample typed bill.
+  if (location.pathname.endsWith('reconcile.html')) {
+    bills.push({ seq: Number(new URLSearchParams(location.search).get('seq')) || 3, machine: 'POS02', createdAt: '2026-11-14T11:13:00+07:00', cashier: 'ตั้น', total: 211, change: 0, status: 'typed', sentCount: 5, payments: [{ method: 'transfer', amount: 111 }, { method: 'cash', amount: 100 }],
+      lines: [{ barcode: '8850000000001', name: 'อะยัม แมคเคอเรล 230กรัม', qty: 2, price: 58, discount: 0, total: 116, manual: false }, { barcode: '', name: 'ของฝาก', qty: 1, price: 25, discount: 0, total: 25, manual: true }, { barcode: '8850000000002', name: 'น้ำดื่ม 600มล.', qty: 3, price: 5, listPrice: 7, discount: 0, total: 15, manual: false, priceEdited: true }] });
+  }
   const codesOf = (b) => b.lines.filter((l) => !l.manual).flatMap((l) => Array(l.qty).fill(l.barcode));
   // ?stop=N makes the mock stop after N barcodes (to see the "stopped midway" result).
   async function mockSend(seq, resume) {
@@ -69,6 +74,12 @@
     sendBill: async (date, seq) => mockSend(seq, false),
     resumeBill: async (date, seq) => mockSend(seq, true),
     onSendProgress: (cb) => { progressCb = cb; },
+    getBill: async (date, seq) => ({ ...bills.find((b) => b.seq === seq), date }),
+    confirmReceived: async (date, seq) => { bills.find((b) => b.seq === seq).status = 'confirmed'; return { ok: true }; },
+    flagBill: async (date, seq, note) => { const b = bills.find((x) => x.seq === seq); b.status = 'flagged'; b.flagNote = note; return { ok: true }; },
+    voidBill: async (date, seq, info) => { if (!String(info.reason || '').trim()) return { ok: false, error: 'ต้องใส่เหตุผลที่ยกเลิกบิล' }; const b = bills.find((x) => x.seq === seq); b.status = 'void'; b.void = { at: new Date().toISOString(), by: info.by, reason: info.reason }; return { ok: true }; },
+    openReconcile: async (date, seq) => { window.open('/reconcile.html?date=' + date + '&seq=' + seq, '_blank', 'width=380,height=640'); return { ok: true }; },
+    onBillsChanged: () => {},
     onWindowFocus: () => {},
   };
 
@@ -87,7 +98,9 @@
         const act = new URLSearchParams(location.search).get('act');
         if (act) {
           const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-          await sleep(150); document.querySelector('#pend-body .btn-go').click();
+          await sleep(150);
+          if (act === 'void') { [...document.querySelectorAll('#pend-body button')].find((b) => b.textContent === 'ยกเลิกบิล').click(); return; }
+          document.querySelector('#pend-body .btn-go').click();
           if (act !== 'confirm') { await sleep(150); document.getElementById('send-go').click(); }
           if (act === 'sending') await sleep(500);
         }

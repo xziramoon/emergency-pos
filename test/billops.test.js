@@ -124,3 +124,51 @@ test('recoverSending warns to check the last barcode when a bill had already typ
   assert.ok(w.some((x) => /ตรวจรายการสุดท้าย/.test(x)), JSON.stringify(w));
   store.clearWarnings();
 });
+
+// ---- Task 12: reconcile + void ----
+test('confirmReceived: typed -> confirmed with confirmedAt', () => {
+  const { d, seq } = seed({ status: 'typed', sentCount: 3 });
+  const b = ops.confirmReceived({ dir: d, date: DATE, seq });
+  assert.equal(b.status, 'confirmed'); assert.ok(b.confirmedAt);
+});
+
+test('flagBill: typed -> flagged with the note', () => {
+  const { d, seq } = seed({ status: 'typed' });
+  const b = ops.flagBill({ dir: d, date: DATE, seq, note: 'POS ยอดต่างกัน 5 บาท' });
+  assert.equal(b.status, 'flagged'); assert.equal(b.flagNote, 'POS ยอดต่างกัน 5 บาท');
+});
+
+test('confirm / flag only work from typed', () => {
+  for (const status of ['pending', 'confirmed', 'void', 'flagged']) {
+    const { d, seq } = seed({ status });
+    assert.throws(() => ops.confirmReceived({ dir: d, date: DATE, seq }), undefined, status);
+    assert.throws(() => ops.flagBill({ dir: d, date: DATE, seq, note: 'x' }), undefined, status);
+  }
+});
+
+test('voidBill: needs a non-empty reason; records who/when/why; allowed from pending/typed/flagged', () => {
+  for (const status of ['pending', 'typed', 'flagged']) {
+    const { d, seq } = seed({ status });
+    assert.throws(() => ops.voidBill({ dir: d, date: DATE, seq, by: 'ตั้น', reason: '   ' }), /เหตุผล/);
+    assert.equal(get(d, seq).status, status);
+    const b = ops.voidBill({ dir: d, date: DATE, seq, by: 'ตั้น', reason: 'ลูกค้าไม่เอา' });
+    assert.equal(b.status, 'void');
+    assert.equal(b.void.by, 'ตั้น'); assert.equal(b.void.reason, 'ลูกค้าไม่เอา'); assert.ok(b.void.at);
+  }
+});
+
+test('voidBill refuses confirmed and already-void bills', () => {
+  for (const status of ['confirmed', 'void', 'sending']) {
+    const { d, seq } = seed({ status });
+    assert.throws(() => ops.voidBill({ dir: d, date: DATE, seq, by: 'ตั้น', reason: 'x' }), undefined, status);
+    assert.equal(get(d, seq).status, status);
+  }
+});
+
+test('a voided bill is not sent and stays in the list for the void filter only', async () => {
+  const { d, seq } = seed();
+  ops.voidBill({ dir: d, date: DATE, seq, by: 'ตั้น', reason: 'x' });
+  const r = await ops.sendBill({ dir: d, date: DATE, seq, settings, script: 'x', runTyper: fakeTyper() });
+  assert.equal(r.ok, false);
+  assert.equal(store.listPending(d).length, 0);
+});

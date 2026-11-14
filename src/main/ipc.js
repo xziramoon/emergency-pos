@@ -29,12 +29,19 @@ const CHANNELS = {
   listBills: 'bills:list',
   sendBill: 'bills:send',
   resumeBill: 'bills:resume',
+  getBill: 'bills:get',
+  confirmReceived: 'bills:received',
+  flagBill: 'bills:flag',
+  voidBill: 'bills:void',
+  openReconcile: 'reconcile:open',
 };
 
 // Main -> renderer push (not an invoke channel): { state: 'idle'|'downloading'|'ready', version }
 const UPDATE_EVENT = 'update:status';
 // Main -> renderer push while the typer runs: { date, seq, typed, total }
 const SEND_PROGRESS_EVENT = 'send:progress';
+// Main -> renderer push when a bill changed in another window (reconcile): refresh the list.
+const BILLS_CHANGED_EVENT = 'bills:changed';
 
 // ctx: { dir, state:{products}, reloadProducts(), getPrinters(), openFolder(), printHtml(html, device), openDrawerRaw(device) }
 function register(ipc, ctx) {
@@ -102,8 +109,14 @@ function register(ipc, ctx) {
     notify: (p) => { if (ctx.notify) ctx.notify(SEND_PROGRESS_EVENT, p); },
   });
   const afterSend = (r, date, seq) => { if (r.ok && r.done && ctx.onTyped) ctx.onTyped(date, seq, r.bill); return r; };
+  const changed = () => { if (ctx.notify) ctx.notify(BILLS_CHANGED_EVENT, {}); };
+  ipc.handle(CHANNELS.getBill, (_e, date, seq) => { const b = billops.findBill(ctx.dir, date, seq); return { ...b, date }; });
+  ipc.handle(CHANNELS.confirmReceived, (_e, date, seq) => { const r = asResult(() => billops.confirmReceived({ dir: ctx.dir, date, seq })); changed(); return r; });
+  ipc.handle(CHANNELS.flagBill, (_e, date, seq, note) => { const r = asResult(() => billops.flagBill({ dir: ctx.dir, date, seq, note })); changed(); return r; });
+  ipc.handle(CHANNELS.voidBill, (_e, date, seq, info) => { const r = asResult(() => billops.voidBill({ dir: ctx.dir, date, seq, by: info && info.by, reason: info && info.reason })); changed(); return r; });
+  ipc.handle(CHANNELS.openReconcile, (_e, date, seq) => { if (ctx.openReconcile) ctx.openReconcile(date, seq); return { ok: true }; });
   ipc.handle(CHANNELS.sendBill, async (_e, date, seq) => afterSend(await billops.sendBill(sendOpts(date, seq)), date, seq));
   ipc.handle(CHANNELS.resumeBill, async (_e, date, seq) => afterSend(await billops.resumeBill(sendOpts(date, seq)), date, seq));
 }
 
-module.exports = { CHANNELS, UPDATE_EVENT, SEND_PROGRESS_EVENT, register };
+module.exports = { CHANNELS, UPDATE_EVENT, SEND_PROGRESS_EVENT, BILLS_CHANGED_EVENT, register };

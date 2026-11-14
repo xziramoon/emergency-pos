@@ -260,6 +260,19 @@
       </div>
     </dialog>
 
+    <dialog id="dlg-void">
+      <form method="dialog" id="form-void">
+        <h2 id="void-title">ยกเลิกบิลนี้?</h2>
+        <p class="muted">บิลที่ยกเลิกไม่ถูกลบและไม่ถูกส่ง แต่ไม่นับในยอดสรุป ใช้ยกเลิกบิลที่รับเงินแล้วใน POS หลักไม่ได้</p>
+        <label>เหตุผลที่ยกเลิก <textarea id="void-reason" rows="3" placeholder="เช่น ลูกค้าคืนสินค้า, คีย์ซ้ำ"></textarea></label>
+        <p id="void-err" class="error" role="alert"></p>
+        <div class="dlg-actions">
+          <button type="button" id="void-no" class="btn">ไม่ยกเลิก</button>
+          <button type="submit" class="btn btn-danger">ยกเลิกบิล</button>
+        </div>
+      </form>
+    </dialog>
+
     <dialog id="dlg-bill">
       <h2 id="bill-title"></h2>
       <p id="bill-meta" class="muted"></p>

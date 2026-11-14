@@ -25,7 +25,11 @@ const server = http.createServer((req, res) => {
   }
   let body = fs.readFileSync(file);
   if (rel === 'index.html') {
-    body = Buffer.from(body.toString('utf8').replace('<script src="settings.js">', '<script src="/__mock-api.js"></script>\n  <script src="/__focus-test.js"></script>\n  <script src="settings.js">'));
+    body = Buffer.from(body.toString('utf8').replace('<script src="settings.js">',
+      '<script src="/__mock-api.js"></script>\n  <script src="/__focus-test.js"></script>\n  <script src="settings.js">'));
+  } else if (rel === 'reconcile.html') {
+    body = Buffer.from(body.toString('utf8').replace('<script src="../shared/manualfix.js">',
+      '<script src="/__mock-api.js"></script>\n  <script src="../shared/manualfix.js">'));
   }
   res.writeHead(200, { 'Content-Type': types[path.extname(file)] || 'application/octet-stream' });
   res.end(body);

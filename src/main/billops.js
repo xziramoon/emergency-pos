@@ -61,4 +61,20 @@ async function run({ dir, date, seq, settings, script, runTyper, resume, notify 
 const sendBill = (o) => run({ ...o, resume: false });
 const resumeBill = (o) => run({ ...o, resume: true });
 
-module.exports = { sendBill, resumeBill, setStatus, findBill };
+// Reconcile (spec 6.7): the cashier compared totals with the main POS.
+function confirmReceived({ dir, date, seq }) {
+  return setStatus(dir, date, seq, 'confirmed', { confirmedAt: new Date().toISOString() });
+}
+
+function flagBill({ dir, date, seq, note }) {
+  return setStatus(dir, date, seq, 'flagged', { flagNote: String(note || '').trim() });
+}
+
+// Void (spec 6.8): never deletes; needs a reason; not allowed once confirmed.
+function voidBill({ dir, date, seq, by, reason }) {
+  const why = String(reason || '').trim();
+  if (!why) throw new Error('ต้องใส่เหตุผลที่ยกเลิกบิล');
+  return setStatus(dir, date, seq, 'void', { void: { at: new Date().toISOString(), by: String(by || '').trim() || '-', reason: why } });
+}
+
+module.exports = { sendBill, resumeBill, setStatus, findBill, confirmReceived, flagBill, voidBill };

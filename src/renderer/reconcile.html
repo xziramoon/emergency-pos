@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>เทียบยอด</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="reconcile-body">
+  <main class="reconcile">
+    <p class="rc-eyebrow">เทียบยอดกับ POS หลัก · บิล <span id="rc-seq"></span></p>
+
+    <section class="rc-total-box">
+      <span class="rc-label">ยอดรวมของบิลฉุกเฉิน</span>
+      <b id="rc-total" class="rc-total">0.00</b>
+    </section>
+
+    <section class="rc-section">
+      <h2>รับเงินใน POS หลักให้ตรงกัน</h2>
+      <ul id="rc-pay" class="rc-list"></ul>
+      <p id="rc-change" class="muted"></p>
+    </section>
+
+    <section id="rc-fix" class="rc-section rc-fix" hidden>
+      <h2>ต้องแก้ด้วยมือใน POS หลัก</h2>
+      <ul id="rc-fix-list" class="rc-list"></ul>
+    </section>
+
+    <p id="rc-err" class="error" role="alert"></p>
+
+    <div id="rc-flag-box" class="rc-flag" hidden>
+      <label>หมายเหตุว่าไม่ตรงอย่างไร <textarea id="rc-note" rows="3" placeholder="เช่น POS หลักขึ้นยอดต่างกัน 5 บาท"></textarea></label>
+      <div class="row">
+        <button id="rc-flag-cancel" class="btn btn-quiet">ยกเลิก</button>
+        <button id="rc-flag-save" class="btn btn-danger">บันทึกว่ายอดไม่ตรง</button>
+      </div>
+    </div>
+
+    <div id="rc-actions" class="rc-actions">
+      <button id="rc-ok" class="btn btn-go rc-ok">ยอดตรง รับเงินแล้ว</button>
+      <button id="rc-bad" class="btn">ยอดไม่ตรง</button>
+    </div>
+  </main>
+  <script src="../shared/manualfix.js"></script>
+  <script src="reconcile.js"></script>
+</body>
+</html>
