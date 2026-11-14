@@ -36,7 +36,16 @@
       "perMachine": true,
       "runAfterFinish": false
     },
-    "artifactName": "emergency-pos-setup-${version}.${ext}"
+    "artifactName": "emergency-pos-setup-${version}.${ext}",
+    "extraResources": [
+      {
+        "from": "resources",
+        "to": "resources",
+        "filter": [
+          "pos-type.ps1"
+        ]
+      }
+    ]
   },
   "devDependencies": {
     "electron": "^45.3.1",
