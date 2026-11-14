@@ -3,7 +3,7 @@
 const App = {
   cashier: null,
   settings: null,
-  views: ['staff', 'sell', 'pending', 'settings'],
+  views: ['staff', 'sell', 'pending', 'summary', 'settings'],
 
   show(name) {
     for (const v of this.views) document.getElementById('view-' + v).hidden = v !== name;

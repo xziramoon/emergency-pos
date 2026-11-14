@@ -79,3 +79,52 @@ test('settings round trip through ipc', async () => {
   await ipc.handlers.get(CHANNELS.saveSettings)({}, { ...cur, staff: ['ตั้น', 'แอน'] });
   assert.deepEqual((await ipc.handlers.get(CHANNELS.getSettings)({})).staff, ['ตั้น', 'แอน']);
 });
+
+// ---- Stage 4: export/import dialogs and summary printing ----
+const store = require('../src/main/store');
+const mkBill = (o = {}) => ({ machine: 'POS02', createdAt: '2026-11-12T10:00:00+07:00', cashier: 'ตั้น', lines: [{ barcode: '1', qty: 1, manual: false, name: 'ก', price: 10, total: 10 }], total: 10, payments: [{ method: 'cash', amount: 10 }], change: 0, status: 'pending', sentCount: 0, sentAt: null, confirmedAt: null, void: null, ...o });
+
+test('exportBills: asks where to save, writes the file, returns the count; cancel returns cancelled', async () => {
+  const d = tmp(); store.saveBill(d, mkBill());
+  const out = path.join(tmp(), 'x.json');
+  const ipc = fakeIpc();
+  register(ipc, { ...ctxWith(d), chooseExportFile: async () => out });
+  const r = await ipc.handlers.get(CHANNELS.exportBills)({});
+  assert.deepEqual({ ok: r.ok, count: r.count }, { ok: true, count: 1 });
+  assert.ok(fs.existsSync(out));
+  const ipc2 = fakeIpc();
+  register(ipc2, { ...ctxWith(d), chooseExportFile: async () => null });
+  assert.deepEqual(await ipc2.handlers.get(CHANNELS.exportBills)({}), { ok: false, cancelled: true });
+});
+
+test('importBills: reads the chosen file; a broken file comes back as ok:false with the message', async () => {
+  const src = tmp(); store.saveBill(src, mkBill());
+  const f = path.join(tmp(), 'x.json');
+  require('../src/main/transfer').exportPending(src, f);
+  const dst = tmp();
+  const ipc = fakeIpc();
+  register(ipc, { ...ctxWith(dst), chooseImportFile: async () => f });
+  const r = await ipc.handlers.get(CHANNELS.importBills)({});
+  assert.deepEqual({ ok: r.ok, added: r.added, skipped: r.skipped }, { ok: true, added: 1, skipped: 0 });
+  const bad = path.join(tmp(), 'bad.json'); fs.writeFileSync(bad, '{x');
+  const ipc2 = fakeIpc();
+  register(ipc2, { ...ctxWith(tmp()), chooseImportFile: async () => bad });
+  const r2 = await ipc2.handlers.get(CHANNELS.importBills)({});
+  assert.equal(r2.ok, false);
+  assert.match(r2.error, /เสีย/);
+});
+
+test('printSummary: prints an 80 mm summary through the printer from settings', async () => {
+  const d = tmp();
+  store.saveSettings(d, { ...store.DEFAULT_SETTINGS, printer: 'EPSON', shopName: 'ร้านทดสอบ' });
+  const printed = [];
+  const ipc = fakeIpc();
+  register(ipc, { ...ctxWith(d), printHtml: async (html, dev) => { printed.push([html, dev]); } });
+  const bills = [mkBill({ status: 'confirmed' })];
+  const r = await ipc.handlers.get(CHANNELS.printSummary)({}, { date: '2026-11-12', machine: '', bills });
+  assert.equal(r.ok, true);
+  assert.equal(printed.length, 1);
+  assert.equal(printed[0][1], 'EPSON');
+  assert.match(printed[0][0], /สรุปยอดขายประจำวัน/);
+  assert.match(printed[0][0], /ร้านทดสอบ/);
+});

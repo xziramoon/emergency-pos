@@ -319,3 +319,26 @@ dialog h2 { font-size: 1.5rem; margin-bottom: 6px; }
 .rc-actions { display: grid; gap: 10px; margin-top: auto; }
 .rc-ok { min-height: 64px; font-size: 1.3rem; }
 .rc-flag textarea { width: 100%; }
+
+/* สรุปยอดขายประจำวัน + ส่งออก/นำเข้า (Stage 4) */
+.tabs-spacer { flex: 1; }
+.view-summary { padding: 22px 28px; }
+.summary { width: min(1040px, 100%); margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+.sum-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.sum-controls input[type="date"], .sum-controls select { width: auto; margin: 0; min-height: 44px; }
+.sum-next-ic { transform: scaleX(-1); }
+.sum-cards { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 12px; }
+.sum-card { display: flex; flex-direction: column; gap: 4px; padding: 16px 18px; background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+.sum-main { background: var(--navy); border-color: var(--navy); color: var(--navy-ink); }
+.sum-k { font-weight: 700; color: var(--muted); }
+.sum-main .sum-k { color: var(--navy-muted); }
+.sum-v { font-size: 1.9rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.sum-main .sum-v { color: var(--mint); font-size: 2.4rem; }
+.sum-note { font-size: .85rem; color: var(--muted); }
+.sum-tables { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; align-items: start; }
+.sum-table { background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.sum-table caption { text-align: left; font-weight: 800; padding: 12px 14px 4px; }
+.sum-table td { padding: 10px 14px; }
+.sum-attn td { color: var(--warn); font-weight: 700; }
+.sum-void td { color: var(--muted); }
+@media (max-width: 900px) { .sum-cards { grid-template-columns: 1fr 1fr; } .sum-tables { grid-template-columns: 1fr; } }

@@ -108,7 +108,49 @@ ${body}
 </body></html>`;
   }
 
-  const api = { buildReceipt, renderReceiptHtml, WIDTH };
+  // Printed daily summary (spec 6.9): same line kinds as a receipt, so the same renderer prints it.
+  // `date` is 'YYYY-MM-DD'; machine is optional (omitted = all machines).
+  function buildSummary(s, { shopName, date, machine, printedAt } = {}) {
+    const shop = String(shopName || '').trim() || 'UNG LUK SENG';
+    const lines = [];
+    const center = (t) => lines.push({ kind: 'center', text: t });
+    const row = (l, r, bold) => lines.push({ kind: bold ? 'bold' : 'row', left: l, right: r });
+    const text = (t) => lines.push({ kind: 'text', text: t });
+    const rule = () => lines.push({ kind: 'rule' });
+    const [y, m, d] = String(date || '').split('-');
+    const thDate = y ? `${d}-${m}-${Number(y) + 543}` : '-';
+
+    center(shop);
+    center('สรุปยอดขายประจำวัน');
+    row(`วันที่ : ${thDate}`, machine ? `เครื่อง : ${machine}` : 'ทุกเครื่อง');
+    rule();
+    row(`ยอดขาย ${s.billCount} บิล`, money(s.sales), true);
+    rule();
+    row('เงินสดที่รับ', money(s.cash));
+    row('หักเงินทอน', '-' + money(s.cash - s.netCash));
+    row('เงินสดสุทธิ (ในลิ้นชัก)', money(s.netCash), true);
+    row('เงินโอน', money(s.transfer));
+    row('โครงการรัฐ', money(s.gov));
+    rule();
+    for (const [name, g] of Object.entries(s.byCashier)) row(`${name} ${g.count} บิล`, money(g.sales));
+    rule();
+    row(`ส่งเข้า POS หลักแล้ว ${s.sent.count} บิล`, money(s.sent.sales));
+    row(`ยังไม่ส่ง ${s.pending.count} บิล`, money(s.pending.sales));
+    if (s.flagged.count) row(`ตรวจสอบ ${s.flagged.count} บิล`, money(s.flagged.sales));
+    row(`ยกเลิก ${s.void.count} บิล (ไม่รวมในยอดขาย)`, money(s.void.sales));
+    rule();
+    text('พิมพ์เมื่อ:' + formatThaiDate(printedAt ? new Date(printedAt) : new Date()));
+
+    const plain = lines.map((x) => {
+      if (x.kind === 'center') return padCenter(x.text);
+      if (x.kind === 'rule') return '-'.repeat(WIDTH);
+      if (x.kind === 'row' || x.kind === 'bold') return padRow(x.left, x.right);
+      return x.text;
+    });
+    return { lines, text: plain.join('\n') };
+  }
+
+  const api = { buildReceipt, renderReceiptHtml, buildSummary, renderSummaryHtml: renderReceiptHtml, WIDTH };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else window.Receipt = api;
 })();

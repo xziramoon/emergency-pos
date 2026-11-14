@@ -6,6 +6,9 @@ const { findByBarcode, searchByName } = require('../shared/products');
 const { confirmAndPrint } = require('./print');
 const { buildReceipt, renderReceiptHtml } = require('../shared/receipt');
 const billops = require('./billops');
+const transfer = require('./transfer');
+const { summarize } = require('../shared/summary');
+const { buildSummary, renderSummaryHtml } = require('../shared/receipt');
 
 const CHANNELS = {
   getSettings: 'settings:get',
@@ -34,6 +37,9 @@ const CHANNELS = {
   flagBill: 'bills:flag',
   voidBill: 'bills:void',
   openReconcile: 'reconcile:open',
+  exportBills: 'transfer:export',
+  importBills: 'transfer:import',
+  printSummary: 'print:summary',
 };
 
 // Main -> renderer push (not an invoke channel): { state: 'idle'|'downloading'|'ready', version }
@@ -115,6 +121,22 @@ function register(ipc, ctx) {
   ipc.handle(CHANNELS.flagBill, (_e, date, seq, note) => { const r = asResult(() => billops.flagBill({ dir: ctx.dir, date, seq, note })); changed(); return r; });
   ipc.handle(CHANNELS.voidBill, (_e, date, seq, info) => { const r = asResult(() => billops.voidBill({ dir: ctx.dir, date, seq, by: info && info.by, reason: info && info.reason })); changed(); return r; });
   ipc.handle(CHANNELS.openReconcile, (_e, date, seq) => { if (ctx.openReconcile) ctx.openReconcile(date, seq); return { ok: true }; });
+  // Export/import (spec 6.10): the file dialogs belong to main (ctx.choose*File); the renderer never sees a path.
+  ipc.handle(CHANNELS.exportBills, async () => {
+    const f = ctx.chooseExportFile ? await ctx.chooseExportFile() : null;
+    if (!f) return { ok: false, cancelled: true };
+    try { return { ok: true, count: transfer.exportPending(ctx.dir, f), file: f }; } catch (e) { return { ok: false, error: (e && e.message) || String(e) }; }
+  });
+  ipc.handle(CHANNELS.importBills, async () => {
+    const f = ctx.chooseImportFile ? await ctx.chooseImportFile() : null;
+    if (!f) return { ok: false, cancelled: true };
+    try { const r = transfer.importBills(ctx.dir, f); changed(); return { ok: true, ...r }; } catch (e) { return { ok: false, error: (e && e.message) || String(e) }; }
+  });
+  // Summary is computed here from the bills the day screen shows, so what prints is what was added up.
+  ipc.handle(CHANNELS.printSummary, (_e, { date, machine, bills }) => asResult(() => {
+    const st = store.loadSettings(ctx.dir);
+    return ctx.printHtml(renderSummaryHtml(buildSummary(summarize(bills || []), { shopName: st.shopName, date, machine })), st.printer);
+  }));
   ipc.handle(CHANNELS.sendBill, async (_e, date, seq) => afterSend(await billops.sendBill(sendOpts(date, seq)), date, seq));
   ipc.handle(CHANNELS.resumeBill, async (_e, date, seq) => afterSend(await billops.resumeBill(sendOpts(date, seq)), date, seq));
 }

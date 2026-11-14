@@ -57,6 +57,7 @@ const Pending = {
         st.appendChild(this.tag(`พิมพ์แล้ว ${b.sentCount}/${total}`));
       }
       const fl = BillState.flagsOf(b);
+      if (b.importedFrom) st.appendChild(this.tag(`มาจากเครื่อง ${b.importedFrom.machine} #${b.importedFrom.seq}`));
       if (fl.manual) st.appendChild(this.tag('มีรายการคีย์เอง'));
       if (fl.priceEdited) st.appendChild(this.tag('มีแก้ราคา'));
       if (b.status === 'flagged' && b.flagNote) st.appendChild(this.tag(b.flagNote));
@@ -197,7 +198,26 @@ const Pending = {
     this.$('pend-msg').textContent = r.ok ? `พิมพ์ใบเสร็จบิล #${b.seq} ซ้ำแล้ว` : 'พิมพ์ไม่สำเร็จ: ' + r.error;
   },
 
+  // ---- export / import between the two machines (spec 6.10) ----
+  async doExport() {
+    const r = await window.api.exportBills();
+    if (r.cancelled) return;
+    this.$('pend-msg').textContent = r.ok ? `ส่งออกบิลค้างส่ง ${r.count} บิลแล้ว นำไฟล์ไปนำเข้าที่อีกเครื่องได้เลย` : 'ส่งออกไม่สำเร็จ: ' + r.error;
+  },
+
+  async doImport() {
+    const r = await window.api.importBills();
+    if (r.cancelled) return;
+    if (!r.ok) { this.$('pend-msg').textContent = 'นำเข้าไม่สำเร็จ: ' + r.error; return; }
+    this.$('pend-msg').textContent = `นำเข้า ${r.added} บิล${r.skipped ? ` (ข้าม ${r.skipped} บิลที่มีอยู่แล้ว)` : ''}`;
+    this.filter = 'open';
+    await this.load();
+    App.refreshStatus();
+  },
+
   init() {
+    this.$('btn-export').addEventListener('click', () => this.doExport());
+    this.$('btn-import').addEventListener('click', () => this.doImport());
     document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => { this.filter = t.dataset.filter; this.load(); }));
     this.$('btn-pending').addEventListener('click', () => this.open());
     this.$('btn-close-pending').addEventListener('click', () => { App.refreshStatus(); App.show('sell'); });

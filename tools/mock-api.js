@@ -79,6 +79,9 @@
     flagBill: async (date, seq, note) => { const b = bills.find((x) => x.seq === seq); b.status = 'flagged'; b.flagNote = note; return { ok: true }; },
     voidBill: async (date, seq, info) => { if (!String(info.reason || '').trim()) return { ok: false, error: 'ต้องใส่เหตุผลที่ยกเลิกบิล' }; const b = bills.find((x) => x.seq === seq); b.status = 'void'; b.void = { at: new Date().toISOString(), by: info.by, reason: info.reason }; return { ok: true }; },
     openReconcile: async (date, seq) => { window.open('/reconcile.html?date=' + date + '&seq=' + seq, '_blank', 'width=380,height=640'); return { ok: true }; },
+    exportBills: async () => ({ ok: true, count: bills.filter((b) => b.status === 'pending' || b.status === 'flagged').length, file: 'mock.json' }),
+    importBills: async () => ({ ok: true, added: 2, skipped: 1 }),
+    printSummary: async (p) => { console.log('[mock] print summary', p.date, p.bills.length); return { ok: true }; },
     onBillsChanged: () => {},
     onWindowFocus: () => {},
   };
@@ -106,6 +109,14 @@
         }
         return;
       }
+      if (demo === 'summary') {
+        const day = new Date(); const ds = day.getFullYear() + '-' + String(day.getMonth() + 1).padStart(2, '0') + '-' + String(day.getDate()).padStart(2, '0');
+        const mkb = (n, o) => ({ seq: n, machine: 'POS02', createdAt: ds + 'T' + String(8 + n).padStart(2, '0') + ':15:00+07:00', cashier: 'ตั้น', total: 0, change: 0, payments: [], lines: [], status: 'confirmed', ...o });
+        bills.push(mkb(1, { total: 100, payments: [{ method: 'cash', amount: 100 }] }), mkb(2, { cashier: 'แอน', total: 250.5, change: 49.5, payments: [{ method: 'cash', amount: 300 }], status: 'typed' }), mkb(3, { total: 80, payments: [{ method: 'transfer', amount: 30 }, { method: 'cash', amount: 50 }], status: 'pending' }), mkb(4, { cashier: 'แอน', total: 60, payments: [{ method: 'gov', amount: 60 }], status: 'flagged' }), mkb(5, { total: 999, change: 1, payments: [{ method: 'cash', amount: 1000 }], status: 'void' }));
+        document.getElementById('btn-summary').click();
+        return;
+      }
+      if (demo === 'summary-empty') { document.getElementById('btn-summary').click(); return; }
       if (demo === 'settings') { document.getElementById('btn-sell-settings').click(); return; }
       const scan = document.getElementById('scan');
       for (const code of ['8850000000001', '8850000000001', '8850000000002', '1234567890123']) {

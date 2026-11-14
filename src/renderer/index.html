@@ -78,6 +78,7 @@
         <span class="chip"><svg class="ic"><use href="#i-user"/></svg><span id="sb-cashier"></span></span>
         <span class="chip chip-quiet" id="sb-machine"></span>
         <button id="btn-pending" class="btn btn-small" aria-label="บิลค้างส่งเข้า POS หลัก"><svg class="ic"><use href="#i-clock"/></svg><span id="pending-label">บิลค้างส่ง</span><span id="pending-count" class="count-badge" hidden>0</span></button>
+        <button id="btn-summary" class="btn btn-small" aria-label="สรุปยอดขายประจำวัน"><svg class="ic"><use href="#i-cash"/></svg>สรุปยอด</button>
         <button id="btn-sell-settings" class="btn btn-quiet btn-small" aria-label="ตั้งค่า"><svg class="ic"><use href="#i-sliders"/></svg>ตั้งค่า</button>
       </div>
     </header>
@@ -197,6 +198,41 @@
     </footer>
   </section>
 
+  <!-- สรุปยอดขายประจำวัน -->
+  <section id="view-summary" class="view view-summary" hidden>
+    <div class="summary">
+      <header class="settings-head">
+        <button id="btn-close-summary" class="btn btn-quiet"><svg class="ic"><use href="#i-back"/></svg>กลับหน้าขาย</button>
+        <h1>สรุปยอดขายประจำวัน</h1>
+        <button id="sum-print" class="btn btn-go"><svg class="ic"><use href="#i-printer"/></svg>พิมพ์ใบสรุป</button>
+      </header>
+      <div class="sum-controls">
+        <button id="sum-prev" class="btn btn-small" aria-label="วันก่อนหน้า"><svg class="ic"><use href="#i-back"/></svg></button>
+        <input id="sum-date" type="date" aria-label="เลือกวัน">
+        <button id="sum-next" class="btn btn-small" aria-label="วันถัดไป"><svg class="ic sum-next-ic"><use href="#i-back"/></svg></button>
+        <button id="sum-today" class="btn btn-small">วันนี้</button>
+        <select id="sum-machine" aria-label="เลือกเครื่อง"></select>
+      </div>
+      <div id="sum-body">
+        <div class="sum-cards">
+          <div class="sum-card sum-main"><span class="sum-k">ยอดขาย <span id="sum-count"></span></span><span id="sum-sales" class="sum-v"></span></div>
+          <div class="sum-card"><span class="sum-k">เงินสดสุทธิ (ในลิ้นชัก)</span><span id="sum-net" class="sum-v"></span><span id="sum-net-note" class="sum-note"></span></div>
+          <div class="sum-card"><span class="sum-k">เงินโอน</span><span id="sum-transfer" class="sum-v"></span></div>
+          <div class="sum-card"><span class="sum-k">โครงการรัฐ</span><span id="sum-gov" class="sum-v"></span></div>
+        </div>
+        <div class="sum-tables">
+          <table class="cart sum-table"><caption>แยกตามพนักงาน</caption><tbody id="sum-cashiers"></tbody></table>
+          <table class="cart sum-table"><caption>สถานะการส่งเข้า POS หลัก</caption><tbody id="sum-status"></tbody></table>
+        </div>
+      </div>
+      <div id="sum-empty" class="empty" hidden>
+        <p class="empty-title">วันนี้ยังไม่มีบิล</p>
+        <p class="empty-hint">เลือกวันอื่นด้วยลูกศร หรือกลับไปขายสินค้าก่อน</p>
+      </div>
+      <p id="sum-msg" class="notice" role="status"></p>
+    </div>
+  </section>
+
   <!-- ตั้งค่า -->
   <!-- บิลค้างส่งเข้า POS หลัก -->
   <section id="view-pending" class="view view-pending" hidden>
@@ -211,6 +247,9 @@
         <button class="tab is-active" role="tab" data-filter="open">ค้างส่ง / รอเทียบยอด</button>
         <button class="tab" role="tab" data-filter="sent">ส่งแล้ว</button>
         <button class="tab" role="tab" data-filter="void">ยกเลิก</button>
+        <span class="tabs-spacer"></span>
+        <button id="btn-export" type="button" class="btn btn-small" title="บันทึกบิลที่ค้างส่งเป็นไฟล์ เพื่อเอาไปส่งเข้า POS หลักจากอีกเครื่อง">ส่งออกบิลค้างส่ง</button>
+        <button id="btn-import" type="button" class="btn btn-small" title="นำเข้าบิลค้างส่งจากไฟล์ของอีกเครื่อง">นำเข้าบิลจากอีกเครื่อง</button>
       </div>
       <div class="cart-scroll pend-scroll">
         <table class="cart pend-table">
@@ -361,11 +400,13 @@
   <script src="../shared/focus-guard.js"></script>
   <script src="../shared/billstate.js"></script>
   <script src="../shared/sendlist.js"></script>
+  <script src="../shared/summary.js"></script>
   <script src="mascot.js"></script>
   <script src="settings.js"></script>
   <script src="app.js"></script>
   <script src="sell.js"></script>
   <script src="pay.js"></script>
   <script src="pending.js"></script>
+  <script src="summary.js"></script>
 </body>
 </html>

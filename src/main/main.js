@@ -1,5 +1,5 @@
 'use strict';
-const { app, BrowserWindow, ipcMain, shell, Menu } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, Menu, dialog } = require('electron');
 const path = require('node:path');
 const store = require('./store');
 const { loadProducts, refreshProducts } = require('./products-store');
@@ -63,6 +63,15 @@ if (!app.requestSingleInstanceLock()) {
       // Typer script is not inside the asar (powershell cannot run from it): see extraResources in package.json.
       typerScript: app.isPackaged ? path.join(process.resourcesPath, 'resources', 'pos-type.ps1') : path.join(__dirname, '../../resources/pos-type.ps1'),
       runTyper,
+      chooseExportFile: async () => {
+        const stamp = new Date().toISOString().slice(0, 10);
+        const r = await dialog.showSaveDialog(win, { title: 'ส่งออกบิลค้างส่ง', defaultPath: `bills-${store.loadSettings(dir).machineId}-${stamp}.json`, filters: [{ name: 'ไฟล์บิล', extensions: ['json'] }] });
+        return r.canceled ? null : r.filePath;
+      },
+      chooseImportFile: async () => {
+        const r = await dialog.showOpenDialog(win, { title: 'นำเข้าบิลจากอีกเครื่อง', properties: ['openFile'], filters: [{ name: 'ไฟล์บิล', extensions: ['json'] }] });
+        return r.canceled ? null : r.filePaths[0];
+      },
       openReconcile: (date, seq) => openReconcile(date, seq),
       onTyped: (date, seq) => openReconcile(date, seq),
       notify: (ch, payload) => { if (win && !win.isDestroyed()) win.webContents.send(ch, payload); },
