@@ -52,3 +52,17 @@ test('runTyper: the temporary list file is removed afterwards', async () => {
 test('runTyper: refuses an empty list', async () => {
   await assert.rejects(() => runTyper({ list: [], delayMs: 10, windowLike: '*x*', script: 'x', spawn: fakeSpawn('ok') }), /empty/i);
 });
+
+// Real powershell.exe + the real script: proves the argv (spaces, '*') and stdout stream parsing work end to end.
+// No Sea & Hill window exists, so the script stops before BlockInput/SendInput: nothing is typed or locked.
+test('runTyper with the real pos-type.ps1: no POS window -> STOPPED window-not-found', { skip: process.platform !== 'win32' }, async () => {
+  const seen = [];
+  const r = await runTyper({
+    list: ['8850000000001', '8850000000002'], delayMs: 100, windowLike: '*No Such Sea And Hill POS Window*',
+    script: path.join(__dirname, '../resources/pos-type.ps1'), onStop: (n, why) => seen.push([n, why]),
+  });
+  assert.equal(r.done, false);
+  assert.equal(r.typed, 0);
+  assert.equal(r.reason, 'window-not-found');
+  assert.deepEqual(seen, [[0, 'window-not-found']]);
+});
