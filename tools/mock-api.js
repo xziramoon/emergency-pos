@@ -59,7 +59,16 @@
         await new Promise((r) => setTimeout(r, 120));
       }
       if (demo === 'manual') { document.getElementById('man-name').value = 'ของฝาก'; document.getElementById('man-price').value = '25'; document.getElementById('form-manual').requestSubmit(); }
+      if (demo === 'thanks') { document.getElementById('man-cancel').click(); document.getElementById('btn-pay').click(); document.getElementById('pay-cash').value = '500'; document.getElementById('pay-cash').dispatchEvent(new Event('input')); document.getElementById('form-pay').requestSubmit(); }
+      if (demo === 'focus-test') await window.__focusTest();
       if (demo === 'pay') { document.getElementById('man-cancel').click(); document.getElementById('btn-pay').click(); document.getElementById('pay-cash').value = '500'; document.getElementById('pay-cash').dispatchEvent(new Event('input')); }
     }, 100));
   }
+
+  // ?t=<ms> freezes every CSS animation at that time (screenshots of animation frames); ?greet=1 clicks the mascot first.
+  const q = new URLSearchParams(location.search);
+  if (q.has('t')) window.addEventListener('load', () => setTimeout(() => {
+    if (q.get('greet')) document.getElementById('mascot-hero').click();
+    setTimeout(() => document.getAnimations().forEach((a) => { try { a.pause(); a.currentTime = Number(q.get('t')); } catch (e) { /* ignore */ } }), 200);
+  }, 300));
 })();

@@ -7,7 +7,7 @@ const path = require('node:path');
 const { exec } = require('node:child_process');
 
 const root = path.join(__dirname, '../src/renderer');
-const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8' };
+const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.png': 'image/png', '.jpg': 'image/jpeg' };
 
 const server = http.createServer((req, res) => {
   const url = new URL(req.url, 'http://x').pathname;
@@ -15,6 +15,7 @@ const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': types['.js'] });
     return res.end(fs.readFileSync(path.join(__dirname, 'mock-api.js')));
   }
+  if (url === '/__focus-test.js') { res.writeHead(200, { 'Content-Type': types['.js'] }); return res.end(fs.readFileSync(path.join(__dirname, 'focus-test.js'))); }
   const rel = url === '/' ? 'index.html' : decodeURIComponent(url.slice(1));
   const shared = rel.startsWith('shared/');
   const base = shared ? path.join(__dirname, '../src/shared') : root;
@@ -24,7 +25,7 @@ const server = http.createServer((req, res) => {
   }
   let body = fs.readFileSync(file);
   if (rel === 'index.html') {
-    body = Buffer.from(body.toString('utf8').replace('<script src="settings.js">', '<script src="/__mock-api.js"></script>\n  <script src="settings.js">'));
+    body = Buffer.from(body.toString('utf8').replace('<script src="settings.js">', '<script src="/__mock-api.js"></script>\n  <script src="/__focus-test.js"></script>\n  <script src="settings.js">'));
   }
   res.writeHead(200, { 'Content-Type': types[path.extname(file)] || 'application/octet-stream' });
   res.end(body);

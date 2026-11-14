@@ -216,4 +216,10 @@ Name 700, price/qty/discount/total right-aligned tabular; qty has circular − /
 - **Don't** touch the receipt output (src/shared/receipt.js) when restyling.
 - **Don't** load web fonts or remote assets (CSP is `default-src 'self'`).
 
+### Mascot: Risu-san (ริสุซัง)
+Shop mascot (red/gold squirrel), cropped from the brand sheet into `src/renderer/assets/mascot/` (native ~150px, so never scaled up). Used as a sticker, never as chrome: wave on the staff welcome (300px card), basket pose in the empty cart, thank-you pose after a sale (the empty state swaps via `Sell.updateEmpty`), megaphone chip on the update banner. Its red/gold is brand colour, not a UI colour: the One Go Rule and the navy/mint total are unchanged. Receipt output has no mascot.
+
+### Scan status chip
+Pill at the right of the scan field: green "พร้อมสแกน" when a scan will land, amber "คลิกช่องสแกน" / "คลิกที่หน้าต่างนี้" when it will not. State is always in words, not colour alone.
+
 **Not canonized (carried by the build):** one-off values outside the tables: scrollbar thumb #b5c3cf, text selection #bfe0d1, 14px radius (scan field, pay button), 1.7rem pay-button label, .8rem key-cap; the `.view-staff` and empty-state illustrations are authored one-offs, not system components; the 1100px layout shows a horizontal scrollbar in the cart.

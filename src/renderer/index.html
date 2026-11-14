@@ -34,7 +34,7 @@
 
   <!-- แจ้งเวอร์ชันใหม่ (ทุกหน้า) -->
   <div id="update-banner" class="update-banner" role="status" hidden>
-    <svg class="ic"><use href="#i-refresh"/></svg>
+    <span class="mascot-chip"><img src="assets/mascot/announce.png" alt="" width="146" height="158"></span>
     <span id="update-text"></span>
     <button id="update-go" class="btn btn-go btn-small" hidden>อัปเดตเลย</button>
     <button id="update-later" class="btn btn-quiet btn-small" hidden>ไว้ทีหลัง</button>
@@ -43,12 +43,22 @@
   <!-- เลือกพนักงาน -->
   <section id="view-staff" class="view view-staff" hidden>
     <div class="welcome">
-      <p class="welcome-shop">ร้านอึ้งลักเส็ง</p>
-      <h1>สวัสดี วันนี้ใครเป็นคนขาย?</h1>
-      <p class="muted">แตะชื่อของคุณเพื่อเริ่มขาย</p>
-      <div id="staff-list" class="staff-grid"></div>
-      <p id="staff-empty" class="empty-note" hidden>ยังไม่มีรายชื่อพนักงาน กรุณาเพิ่มในหน้าตั้งค่า</p>
-      <button id="btn-open-settings" class="btn btn-quiet"><svg class="ic"><use href="#i-sliders"/></svg>ตั้งค่า</button>
+      <div id="mascot-hero" class="mascot-stage" role="img" aria-label="ริสุซัง มาสคอตร้านอึ้งลักเส็ง กำลังโบกมือทักทาย (คลิกเพื่อทักทาย)">
+        <div class="mascot-body">
+          <img class="m-base" src="assets/mascot/wave.png" alt="" width="370" height="510">
+          <img class="m-tail" src="assets/mascot/wave.png" alt="" aria-hidden="true">
+          <span class="m-lid m-lid-l"></span><span class="m-lid m-lid-r"></span>
+        </div>
+        <p id="mascot-bubble" class="mascot-bubble" hidden></p>
+      </div>
+      <div class="welcome-body">
+        <p class="welcome-shop">ร้านอึ้งลักเส็ง</p>
+        <h1>สวัสดี วันนี้ใครเป็นคนขาย?</h1>
+        <p class="muted">แตะชื่อของคุณเพื่อเริ่มขาย</p>
+        <div id="staff-list" class="staff-grid"></div>
+        <p id="staff-empty" class="empty-note" hidden>ยังไม่มีรายชื่อพนักงาน กรุณาเพิ่มในหน้าตั้งค่า</p>
+        <button id="btn-open-settings" class="btn btn-quiet"><svg class="ic"><use href="#i-sliders"/></svg>ตั้งค่า</button>
+      </div>
     </div>
   </section>
 
@@ -76,6 +86,7 @@
         <div class="scan-wrap">
           <svg class="ic scan-ic"><use href="#i-barcode"/></svg>
           <input id="scan" type="text" autocomplete="off" spellcheck="false" placeholder="ยิงบาร์โค้ด หรือพิมพ์ชื่อสินค้า แล้วกด Enter" aria-label="ช่องสแกนสินค้า">
+          <span id="scan-status" class="scan-status is-lost" role="status" aria-live="polite">คลิกช่องสแกน</span>
           <ul id="results" class="results" hidden></ul>
         </div>
         <div class="cart-scroll">
@@ -86,14 +97,9 @@
             <tbody id="cart-body"></tbody>
           </table>
           <div id="cart-empty" class="empty">
-            <svg class="empty-art" viewBox="0 0 160 110" aria-hidden="true">
-              <rect x="24" y="30" width="112" height="60" rx="10" class="ea-body"/>
-              <path d="M44 48v24M52 48v24M60 48v24M70 48v24M78 48v24M90 48v24M98 48v24" class="ea-bars"/>
-              <path d="M18 58h124" class="ea-beam"/>
-              <rect x="56" y="90" width="48" height="10" rx="3" class="ea-foot"/>
-            </svg>
-            <p class="empty-title">ยังไม่มีสินค้าในบิล</p>
-            <p class="empty-hint">ยิงบาร์โค้ดสินค้าชิ้นแรกเพื่อเริ่มขาย<br>หรือพิมพ์ชื่อสินค้าในช่องด้านบน แล้วกด Enter</p>
+            <img id="empty-mascot" class="mascot-sticker" src="assets/mascot/basket.png" alt="" width="146" height="160">
+            <p id="empty-title" class="empty-title">ยังไม่มีสินค้าในบิล</p>
+            <p id="empty-hint" class="empty-hint">ยิงบาร์โค้ดสินค้าชิ้นแรกเพื่อเริ่มขาย<br>หรือพิมพ์ชื่อสินค้าในช่องด้านบน แล้วกด Enter</p>
           </div>
         </div>
       </div>
@@ -258,6 +264,8 @@
 
   <script src="../shared/bill.js"></script>
   <script src="../shared/cart.js"></script>
+  <script src="../shared/focus-guard.js"></script>
+  <script src="mascot.js"></script>
   <script src="settings.js"></script>
   <script src="app.js"></script>
   <script src="sell.js"></script>

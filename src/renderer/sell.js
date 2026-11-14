@@ -34,6 +34,21 @@ const Sell = {
       el.classList.toggle('is-active', i === n);
       el.classList.toggle('is-done', i < n);
     });
+    this.updateEmpty();
+  },
+
+  // Risu-san mascot: basket pose before the first item, thank-you pose right after a sale.
+  updateEmpty() {
+    const thanks = this.step === 3 && this.cart.length === 0;
+    const was = this.thanksShown;
+    this.thanksShown = thanks;
+    if (thanks && !was) { Mascot.play(this.$('empty-mascot'), 'is-pop'); Mascot.burst(this.$('empty-mascot')); }
+    if (!thanks) this.$('empty-mascot').classList.remove('is-pop');
+    this.$('empty-mascot').src = thanks ? 'assets/mascot/thanks.png' : 'assets/mascot/basket.png';
+    this.$('empty-title').textContent = thanks ? 'ขอบคุณที่มาอุดหนุน' : 'ยังไม่มีสินค้าในบิล';
+    this.$('empty-hint').textContent = thanks
+      ? 'บิลเสร็จแล้ว ยิงสินค้าชิ้นแรกของลูกค้าคนถัดไปได้เลย'
+      : 'ยิงบาร์โค้ดสินค้าชิ้นแรกเพื่อเริ่มขาย หรือพิมพ์ชื่อสินค้าในช่องด้านบน แล้วกด Enter';
   },
 
   // Total ticks to the new amount (instant when the user prefers reduced motion).
@@ -42,6 +57,9 @@ const Sell = {
     const from = this.shownTotal === undefined ? to : this.shownTotal;
     this.shownTotal = to;
     cancelAnimationFrame(this.tickId);
+    clearTimeout(this.tickEnd);
+    // rAF pauses while the window is hidden/occluded; never leave a stale amount on a till.
+    this.tickEnd = setTimeout(() => { cancelAnimationFrame(this.tickId); el.textContent = this.fmt(to); }, 400);
     if (from === to || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) { el.textContent = this.fmt(to); return; }
     const t0 = performance.now();
     const step = (t) => {
@@ -87,6 +105,7 @@ const Sell = {
     this.showTotal(s.total);
     this.$('counts').textContent = `${s.itemCount} รายการ · ${s.pieceCount} ชิ้น`;
     this.$('cart-empty').hidden = this.cart.length > 0;
+    this.updateEmpty();
     this.$('btn-pay').disabled = this.cart.length === 0;
     this.$('btn-clear').disabled = this.cart.length === 0;
     const last = body.lastElementChild;
@@ -113,6 +132,7 @@ const Sell = {
   numInput(value, label, onCommit, step, min) {
     const inp = document.createElement('input');
     inp.type = 'number'; inp.value = value; inp.step = step; inp.className = 'cell-input';
+    inp.dataset.orig = value;
     if (min !== undefined) inp.min = min;
     inp.setAttribute('aria-label', label);
     // An emptied field means "no change" (Number('') would otherwise become 0).
@@ -249,7 +269,81 @@ const Sell = {
     document.addEventListener('click', (e) => {
       if (!e.target.closest('input, button, li, dialog, select, textarea')) this.focusScan();
     });
+    this.initFocusGuard();
     this.render();
+  },
+
+  // ---- Scanner focus guard: a scan must never be lost, and never land in a price/qty cell. ----
+  activeKind() {
+    const a = document.activeElement;
+    if (!a || a === document.body) return 'body';
+    if (a === this.$('scan')) return 'scan';
+    if (a.classList.contains('cell-input')) return 'cell';
+    if (a.closest('input, textarea, select')) return 'other';
+    return 'button';
+  },
+
+  guardState() {
+    return {
+      sellVisible: !this.$('view-sell').hidden, modalOpen: this.modalOpen(),
+      active: this.activeKind(), idleMs: Date.now() - this.lastActivity,
+    };
+  },
+
+  updateScanStatus() {
+    const st = FocusGuard.scanStatus({ hasFocus: document.hasFocus(), scanFocused: document.activeElement === this.$('scan') });
+    const el = this.$('scan-status');
+    el.className = 'scan-status is-' + st;
+    el.textContent = { ready: 'พร้อมสแกน', lost: 'คลิกช่องสแกน', away: 'คลิกที่หน้าต่างนี้' }[st];
+  },
+
+  guardTick() {
+    if (FocusGuard.decideFocus(this.guardState()) === 'scan') {
+      const a = document.activeElement;
+      if (a && a !== document.body) a.blur(); // an idle half-typed cell commits normally
+      this.$('scan').focus();
+    }
+    this.updateScanStatus();
+  },
+
+  initFocusGuard() {
+    this.lastActivity = Date.now();
+    this.burst = FocusGuard.createBurstDetector();
+    const scan = this.$('scan');
+    const touch = () => { this.lastActivity = Date.now(); };
+    document.addEventListener('pointerdown', touch, true);
+    document.addEventListener('focusin', touch, true);
+    document.addEventListener('keydown', (e) => {
+      touch();
+      const s = this.guardState();
+      const printable = typeof e.key === 'string' && e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey;
+      if (s.sellVisible && !s.modalOpen && s.active === 'cell' && printable) {
+        // Several keys a few ms apart = barcode scanner pointed at the wrong place: undo and re-route.
+        const r = this.burst.push(e.key, e.timeStamp);
+        if (r.burst) {
+          e.preventDefault();
+          const cell = document.activeElement;
+          if (cell.dataset.orig !== undefined) cell.value = cell.dataset.orig;
+          scan.focus();
+          scan.value = r.text;
+          this.burst.reset();
+        }
+        return;
+      }
+      if (FocusGuard.keyAction(s, e) === 'redirect') {
+        e.preventDefault();
+        scan.focus();
+        scan.value += e.key;
+      }
+    }, true);
+    scan.addEventListener('focus', () => this.updateScanStatus());
+    scan.addEventListener('blur', () => setTimeout(() => this.updateScanStatus(), 0));
+    window.addEventListener('focus', () => this.guardTick());
+    window.addEventListener('blur', () => this.updateScanStatus());
+    document.addEventListener('visibilitychange', () => this.guardTick());
+    if (window.api.onWindowFocus) window.api.onWindowFocus(() => this.guardTick());
+    setInterval(() => this.guardTick(), 1000);
+    this.updateScanStatus();
   },
 };
 

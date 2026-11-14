@@ -31,7 +31,13 @@ if (!app.requestSingleInstanceLock()) {
       reloadProducts,
       getPrinters: () => win.webContents.getPrintersAsync(),
       openFolder: () => shell.openPath(dir),
-      printHtml,
+      // The hidden print window can pull OS focus away from the main window; hand it back so scans keep landing.
+      printHtml: async (...a) => {
+        const had = win && !win.isDestroyed() && win.isFocused();
+        try { return await printHtml(...a); } finally {
+          if (had && win && !win.isDestroyed()) { win.focus(); win.webContents.focus(); }
+        }
+      },
       openDrawerRaw,
       version: app.getVersion(),
       installUpdate: () => require('electron-updater').autoUpdater.quitAndInstall(false, true),
@@ -54,6 +60,7 @@ if (!app.requestSingleInstanceLock()) {
       },
     });
     win.maximize();
+    win.on('focus', () => { if (!win.isDestroyed()) win.webContents.send('window:focus'); });
     win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
     win.webContents.on('will-navigate', (e) => e.preventDefault());
     win.loadFile(path.join(__dirname, '../renderer/index.html'));

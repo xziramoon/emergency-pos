@@ -23,4 +23,5 @@ contextBridge.exposeInMainWorld('api', {
   getUpdateStatus: call('update:get'),
   checkUpdate: call('update:check'),
   onUpdateStatus: (cb) => ipcRenderer.on('update:status', (_e, s) => cb(s)),
+  onWindowFocus: (cb) => ipcRenderer.on('window:focus', () => cb()),
 });
