@@ -113,7 +113,13 @@ const Settings = {
 
 Settings.$('ps-enabled').addEventListener('change', (e) => Settings.applyPrintServer({ enabled: e.target.checked, port: parseInt(Settings.$('ps-port').value, 10) }));
 Settings.$('ps-port').addEventListener('change', () => { if (Settings.$('ps-enabled').checked) Settings.applyPrintServer({ port: parseInt(Settings.$('ps-port').value, 10) }); });
-Settings.$('ps-regen').addEventListener('click', () => { if (confirm('สร้างรหัสใหม่? มือถือที่จับคู่ไว้แล้วจะพิมพ์ไม่ได้จนกว่าจะใส่รหัสใหม่')) Settings.applyPrintServer({ regenerate: true }); });
+// Two clicks (confirm() can leave inputs untypable in Electron on Windows).
+Settings.$('ps-regen').addEventListener('click', (e) => {
+  const b = e.currentTarget;
+  if (!b.dataset.armed) { b.dataset.armed = '1'; b.dataset.label = b.textContent; b.textContent = 'กดอีกครั้งเพื่อยืนยัน (มือถือที่จับคู่ไว้จะใช้ไม่ได้)'; return; }
+  b.textContent = b.dataset.label; delete b.dataset.armed;
+  Settings.applyPrintServer({ regenerate: true });
+});
 Settings.$('ps-copy').addEventListener('click', async () => { try { await navigator.clipboard.writeText(Settings.$('ps-token').value); Settings.$('set-msg').textContent = 'คัดลอกรหัสแล้ว'; } catch { Settings.$('ps-token').select(); } });
 Settings.$('btn-save-settings').addEventListener('click', () => Settings.save());
 Settings.$('btn-refresh-products').addEventListener('click', () => Settings.refresh());

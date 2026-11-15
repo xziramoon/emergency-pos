@@ -108,6 +108,7 @@ const Sell = {
     this.updateEmpty();
     this.$('btn-pay').disabled = this.cart.length === 0;
     this.$('btn-clear').disabled = this.cart.length === 0;
+    this.$('btn-hold').disabled = this.cart.length === 0;
     const last = body.lastElementChild;
     if (last && prev.length < keys.length) last.scrollIntoView({ block: 'nearest' });
   },
@@ -242,6 +243,80 @@ const Sell = {
     this.focusScan();
   },
 
+  // ---- Parked bills (พักบิล): kept in localStorage so a restart does not lose a customer's basket. ----
+  held: [],
+  HELD_KEY: 'epos.held',
+
+  loadHeld() {
+    try { this.held = Hold.parse(localStorage.getItem(this.HELD_KEY)); } catch { this.held = []; }
+  },
+
+  saveHeld() {
+    try { localStorage.setItem(this.HELD_KEY, JSON.stringify(this.held)); } catch { /* still held in memory */ }
+    this.renderHeldButton();
+  },
+
+  renderHeldButton() {
+    this.$('btn-held').hidden = this.held.length === 0;
+    this.$('held-count').textContent = this.held.length;
+  },
+
+  holdMeta() {
+    return { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), at: new Date().toISOString(), cashier: App.cashier || '' };
+  },
+
+  holdBill() {
+    if (this.cart.length === 0) return;
+    this.held = Hold.hold(this.held, this.cart, this.holdMeta());
+    this.saveHeld();
+    this.cart = [];
+    this.setStep(1);
+    this.render();
+    this.message('พักบิลไว้แล้ว ขายให้ลูกค้าคนถัดไปได้เลย');
+    this.focusScan();
+  },
+
+  openHeld() {
+    const ul = this.$('held-list');
+    ul.textContent = '';
+    this.held.forEach((h) => {
+      const li = document.createElement('li');
+      const time = new Date(h.at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+      const info = document.createElement('span');
+      info.textContent = `${time} · ${h.lines.length} รายการ · ฿${this.fmt(h.total)}${h.cashier ? ' · ' + h.cashier : ''}`;
+      const recall = document.createElement('button');
+      recall.type = 'button'; recall.className = 'btn btn-go btn-small'; recall.textContent = 'เรียกกลับ';
+      recall.addEventListener('click', () => this.recallHeld(h.id));
+      const del = document.createElement('button');
+      del.type = 'button'; del.className = 'btn btn-quiet btn-small'; del.textContent = 'ลบ';
+      // Two clicks to delete (confirm() can leave inputs untypable in Electron on Windows, see clear()).
+      del.addEventListener('click', () => {
+        if (!del.dataset.armed) { del.dataset.armed = '1'; del.textContent = 'กดอีกครั้งเพื่อลบ'; del.classList.add('btn-danger'); return; }
+        this.held = Hold.take(this.held, h.id).held;
+        this.saveHeld();
+        if (this.held.length) this.openHeld(); else this.$('dlg-held').close();
+      });
+      li.append(info, recall, del);
+      ul.appendChild(li);
+    });
+    if (!this.$('dlg-held').open) this.$('dlg-held').showModal();
+  },
+
+  recallHeld(id) {
+    const r = Hold.take(this.held, id);
+    if (!r.lines) return;
+    this.held = r.held;
+    // A bill already on screen is parked first, so nothing is lost by recalling another.
+    if (this.cart.length) this.held = Hold.hold(this.held, this.cart, this.holdMeta());
+    this.cart = r.lines;
+    this.saveHeld();
+    this.$('dlg-held').close();
+    this.setStep(1);
+    this.render();
+    this.message('เรียกบิลที่พักไว้กลับมาแล้ว');
+    this.focusScan();
+  },
+
   newBill(message) {
     this.cart = [];
     this.message(message);
@@ -261,6 +336,11 @@ const Sell = {
     this.$('btn-pay').addEventListener('click', () => Pay.open());
     this.$('btn-clear').addEventListener('click', () => this.clear());
     this.$('btn-reprint').addEventListener('click', () => this.reprint());
+    this.$('btn-hold').addEventListener('click', () => this.holdBill());
+    this.$('btn-held').addEventListener('click', () => this.openHeld());
+    this.$('held-close').addEventListener('click', () => this.$('dlg-held').close());
+    this.loadHeld();
+    this.renderHeldButton();
     document.addEventListener('keydown', (e) => {
       if (e.key === 'F11' && !this.$('view-sell').hidden && !this.modalOpen()) { e.preventDefault(); Pay.open(); }
     });

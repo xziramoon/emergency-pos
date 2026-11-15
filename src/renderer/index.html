@@ -116,12 +116,25 @@
           <span>รับเงิน</span><kbd>F11</kbd>
         </button>
         <div class="side-row">
+          <button id="btn-hold" class="btn" disabled title="พักบิลนี้ไว้ก่อน แล้วขายให้ลูกค้าคนอื่น"><svg class="ic"><use href="#i-clock"/></svg>พักบิล</button>
+          <button id="btn-held" class="btn" hidden><svg class="ic"><use href="#i-clock"/></svg>บิลที่พักไว้<span id="held-count" class="count-badge">0</span></button>
+        </div>
+        <div class="side-row">
           <button id="btn-clear" class="btn btn-quiet" disabled><svg class="ic"><use href="#i-trash"/></svg>ล้างบิล</button>
           <button id="btn-reprint" class="btn btn-quiet" hidden><svg class="ic"><use href="#i-printer"/></svg>พิมพ์ใบล่าสุดซ้ำ</button>
         </div>
         <p id="sell-msg" class="notice" role="status"></p>
       </aside>
     </div>
+
+    <dialog id="dlg-held">
+      <form method="dialog" id="form-held">
+        <h2>บิลที่พักไว้</h2>
+        <p class="muted">เลือกบิลที่จะเรียกกลับมาขายต่อ ถ้าบิลตอนนี้ยังมีสินค้า ระบบจะพักบิลนั้นไว้ให้อัตโนมัติ</p>
+        <ul id="held-list" class="held-list"></ul>
+        <div class="dlg-actions"><button type="button" id="held-close" class="btn">ปิด</button></div>
+      </form>
+    </dialog>
 
     <dialog id="dlg-clear">
       <form method="dialog" id="form-clear">
@@ -426,6 +439,7 @@
   <script src="../shared/billstate.js"></script>
   <script src="../shared/sendlist.js"></script>
   <script src="../shared/summary.js"></script>
+  <script src="../shared/hold.js"></script>
   <script src="mascot.js"></script>
   <script src="settings.js"></script>
   <script src="app.js"></script>

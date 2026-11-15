@@ -99,7 +99,7 @@
     return `<!doctype html><html lang="th"><head><meta charset="utf-8"><style>
 @page { size: 80mm auto; margin: 0; }
 html, body { margin: 0; padding: 0; background: #fff; }
-body { width: 72mm; margin: 0 4mm 0 4mm; padding: 2mm 0; color: #000; font: 12pt/1.25 "Tahoma", "Leelawadee UI", sans-serif; }
+body { width: 64mm; margin: 0 0 0 4mm; padding: 2mm 0; color: #000; font: 12pt/1.25 "Tahoma", "Leelawadee UI", sans-serif; }
 .c { text-align: center; }
 .r { display: flex; justify-content: space-between; gap: 4mm; }
 hr { border: 0; border-top: 1px dashed #000; margin: 1mm 0; }
