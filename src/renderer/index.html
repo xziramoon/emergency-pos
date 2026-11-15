@@ -355,6 +355,24 @@
       </section>
 
       <section class="panel">
+        <h2>รับงานพิมพ์จากมือถือ</h2>
+        <label class="check"><input id="ps-enabled" type="checkbox"> เปิดรับงานพิมพ์จากมือถือ (เครื่องนี้ต้องเปิดอยู่และอยู่เครือข่ายเดียวกับมือถือ)</label>
+        <p id="ps-state" class="muted"></p>
+        <div id="ps-detail" hidden>
+          <div class="two-col">
+            <label>ที่อยู่ที่ใส่ในมือถือ <input id="ps-address" type="text" readonly></label>
+            <label>รหัสจับคู่ (โทเค็น) <input id="ps-token" type="text" readonly></label>
+          </div>
+          <div class="row">
+            <button id="ps-copy" class="btn btn-quiet">คัดลอกรหัส</button>
+            <button id="ps-regen" class="btn btn-quiet">สร้างรหัสใหม่ (เครื่องที่จับคู่ไว้จะใช้ไม่ได้)</button>
+          </div>
+        </div>
+        <label>เลขพอร์ต <input id="ps-port" type="number" min="1024" max="65535" step="1"></label>
+        <p class="muted">สวิตช์และเลขพอร์ตมีผลทันที ไม่ต้องกดบันทึก ถ้า Windows ถามเรื่องไฟร์วอลล์ให้กดอนุญาต</p>
+      </section>
+
+      <section class="panel">
         <h2>ส่งเข้า POS หลัก</h2>
         <div class="two-col">
           <label>หน่วงระหว่างบาร์โค้ด (มิลลิวินาที) <input id="set-delay" type="number" min="100" step="50"></label>

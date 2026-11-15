@@ -80,6 +80,8 @@ input::placeholder, textarea::placeholder { color: #75879a; }
 input:hover, textarea:hover, select:hover { border-color: #b3c1ce; }
 input:focus, textarea:focus, select:focus { outline: 3px solid rgba(26, 100, 192, .28); border-color: var(--focus); }
 input[type=number] { font-variant-numeric: tabular-nums; }
+label.check { display: flex; align-items: center; gap: 10px; font-weight: 600; }
+label.check input { width: 22px; height: 22px; margin: 0; flex: none; }
 .pay-method input[type=number]::-webkit-inner-spin-button, .pay-method input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 .cell-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }

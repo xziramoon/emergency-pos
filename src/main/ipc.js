@@ -40,6 +40,8 @@ const CHANNELS = {
   exportBills: 'transfer:export',
   importBills: 'transfer:import',
   printSummary: 'print:summary',
+  getPrintServer: 'printserver:get',
+  setPrintServer: 'printserver:set',
 };
 
 // Main -> renderer push (not an invoke channel): { state: 'idle'|'downloading'|'ready', version }
@@ -137,6 +139,9 @@ function register(ipc, ctx) {
     const st = store.loadSettings(ctx.dir);
     return ctx.printHtml(renderSummaryHtml(buildSummary(summarize(bills || []), { shopName: st.shopName, date, machine })), st.printer);
   }));
+  // LAN print relay (design 5.3): settings screen reads/changes it; the controller lives in main.
+  ipc.handle(CHANNELS.getPrintServer, () => ctx.printServer.info());
+  ipc.handle(CHANNELS.setPrintServer, (_e, patch) => ctx.printServer.apply(patch || {}));
   ipc.handle(CHANNELS.sendBill, async (_e, date, seq) => afterSend(await billops.sendBill(sendOpts(date, seq)), date, seq));
   ipc.handle(CHANNELS.resumeBill, async (_e, date, seq) => afterSend(await billops.resumeBill(sendOpts(date, seq)), date, seq));
 }

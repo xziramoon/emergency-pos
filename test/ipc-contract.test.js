@@ -128,3 +128,13 @@ test('printSummary: prints an 80 mm summary through the printer from settings', 
   assert.match(printed[0][0], /สรุปยอดขายประจำวัน/);
   assert.match(printed[0][0], /ร้านทดสอบ/);
 });
+
+test('print server channels delegate to the controller', async () => {
+  const ipc = fakeIpc();
+  const seen = [];
+  const printServer = { info: async () => ({ running: false }), apply: async (p) => { seen.push(p); return { running: true }; } };
+  register(ipc, { ...ctxWith(tmp()), printServer });
+  assert.deepEqual(await ipc.handlers.get(CHANNELS.getPrintServer)(), { running: false });
+  assert.deepEqual(await ipc.handlers.get(CHANNELS.setPrintServer)({}, { enabled: true }), { running: true });
+  assert.deepEqual(seen, [{ enabled: true }]);
+});

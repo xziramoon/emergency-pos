@@ -39,6 +39,7 @@
     return { ok: true, done: true, typed: n, total: all.length, bill: b };
   }
 
+  const psState = { enabled: true, running: true, port: 8765, token: '3f9a1c07b2d84e56a0c1d7e8f9b23a45', addresses: ['192.168.1.20'], error: '' };
   window.api = {
     getSettings: async () => structuredClone(settings),
     saveSettings: async (s) => { settings = structuredClone(s); return s; },
@@ -81,6 +82,13 @@
     openReconcile: async (date, seq) => { window.open('/reconcile.html?date=' + date + '&seq=' + seq, '_blank', 'width=380,height=640'); return { ok: true }; },
     exportBills: async () => ({ ok: true, count: bills.filter((b) => b.status === 'pending' || b.status === 'flagged').length, file: 'mock.json' }),
     importBills: async () => ({ ok: true, added: 2, skipped: 1 }),
+    getPrintServer: async () => psState,
+    setPrintServer: async (p) => {
+      if (typeof p.enabled === 'boolean') psState.enabled = psState.running = p.enabled;
+      if (p.port) psState.port = p.port;
+      if (p.regenerate) psState.token = 'f'.repeat(32).replace(/f/g, () => Math.floor(Math.random() * 16).toString(16));
+      return { ...psState };
+    },
     printSummary: async (p) => { console.log('[mock] print summary', p.date, p.bills.length); return { ok: true }; },
     onBillsChanged: () => {},
     onWindowFocus: () => {},

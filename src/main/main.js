@@ -6,6 +6,8 @@ const { loadProducts, refreshProducts } = require('./products-store');
 const { register } = require('./ipc');
 const { printHtml, openDrawerRaw } = require('./print');
 const { runTyper } = require('./typer');
+const { createController } = require('./printserver');
+const { buildReceipt, renderReceiptHtml } = require('../shared/receipt');
 const { screen } = require('electron');
 const { setupAutoUpdate } = require('./updater');
 
@@ -46,19 +48,36 @@ if (!app.requestSingleInstanceLock()) {
     try { store.recoverSending(dir); } catch (e) { console.error('recoverSending failed', e); } // must never stop the window opening
     reloadProducts();
 
+    // Print relay for phones on the shop network (design 5.3). Off until switched on in Settings.
+    const lanAddresses = () => Object.values(require('node:os').networkInterfaces()).flat()
+      .filter((i) => i && i.family === 'IPv4' && !i.internal).map((i) => i.address);
+    // The hidden print window can pull OS focus away from the main window; hand it back so scans keep landing.
+    const focusSafePrint = async (...a) => {
+      const had = win && !win.isDestroyed() && win.isFocused();
+      try { return await printHtml(...a); } finally {
+        if (had && win && !win.isDestroyed()) { win.focus(); win.webContents.focus(); }
+      }
+    };
+    const relayPrint = async (bill) => {
+      const st = store.loadSettings(dir);
+      await focusSafePrint(renderReceiptHtml(buildReceipt(bill, { shopName: st.shopName })), st.printer);
+    };
+    const printServer = createController({
+      loadSettings: () => store.loadSettings(dir), saveSettings: (s) => store.saveSettings(dir, s),
+      print: relayPrint,
+      printTest: () => focusSafePrint('<!doctype html><meta charset="utf-8"><body style="font:14pt Tahoma;width:72mm;margin:0 4mm"><p>ทดสอบเครื่องพิมพ์ (จากมือถือ)</p><p>POS ฉุกเฉิน</p></body>', store.loadSettings(dir).printer),
+      addresses: lanAddresses,
+    });
+    printServer.init().catch((e) => console.error('print server init failed', e));
+
     register(ipcMain, {
       dir,
+      printServer,
       state,
       reloadProducts,
       getPrinters: () => win.webContents.getPrintersAsync(),
       openFolder: () => shell.openPath(dir),
-      // The hidden print window can pull OS focus away from the main window; hand it back so scans keep landing.
-      printHtml: async (...a) => {
-        const had = win && !win.isDestroyed() && win.isFocused();
-        try { return await printHtml(...a); } finally {
-          if (had && win && !win.isDestroyed()) { win.focus(); win.webContents.focus(); }
-        }
-      },
+      printHtml: focusSafePrint,
       openDrawerRaw,
       // Typer script is not inside the asar (powershell cannot run from it): see extraResources in package.json.
       typerScript: app.isPackaged ? path.join(process.resourcesPath, 'resources', 'pos-type.ps1') : path.join(__dirname, '../../resources/pos-type.ps1'),
@@ -120,8 +139,7 @@ if (!app.requestSingleInstanceLock()) {
     setInterval(() => { try { store.makeBackup(dir, new Date()); } catch { /* keep selling */ } }, 30 * 60 * 1000);
   });
 
-  app.on('before-quit', () => {
-    try { store.makeBackup(dir, new Date()); } catch { /* ignore */ }
+  app.on('before-quit', () => {    try { store.makeBackup(dir, new Date()); } catch { /* ignore */ }
   });
   app.on('window-all-closed', () => app.quit());
 }

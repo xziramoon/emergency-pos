@@ -19,6 +19,7 @@ const Settings = {
     await this.fillPrinters(s.printer);
     try { this.$('set-version').textContent = 'เวอร์ชันที่ใช้อยู่: ' + (await window.api.getUpdateStatus()).current; } catch { /* leave blank */ }
     await this.showProductsInfo();
+    try { this.showPrintServer(await window.api.getPrintServer()); } catch { /* panel stays blank */ }
     App.show('settings');
   },
 
@@ -42,6 +43,21 @@ const Settings = {
     this.$('set-msg').textContent = 'กำลังส่งงานพิมพ์...';
     const r = await fn();
     this.$('set-msg').textContent = r.ok ? okText : 'ไม่สำเร็จ: ' + r.error;
+  },
+
+  showPrintServer(i) {
+    this.$('ps-enabled').checked = i.enabled;
+    this.$('ps-port').value = i.port;
+    this.$('ps-detail').hidden = !i.running;
+    this.$('ps-token').value = i.token;
+    this.$('ps-address').value = i.addresses.length ? i.addresses.map((a) => `${a}:${i.port}`).join('  หรือ  ') : 'ไม่พบเครือข่าย (เชื่อม Wi-Fi หรือสายแลนก่อน)';
+    this.$('ps-state').textContent = i.error ? i.error
+      : i.running ? 'เปิดอยู่ รอรับงานพิมพ์จากมือถือ'
+        : i.enabled ? 'เปิดไม่สำเร็จ' : 'ปิดอยู่';
+  },
+
+  async applyPrintServer(patch) {
+    this.showPrintServer(await window.api.setPrintServer(patch));
   },
 
   async showProductsInfo() {
@@ -90,6 +106,10 @@ const Settings = {
   },
 };
 
+Settings.$('ps-enabled').addEventListener('change', (e) => Settings.applyPrintServer({ enabled: e.target.checked, port: parseInt(Settings.$('ps-port').value, 10) }));
+Settings.$('ps-port').addEventListener('change', () => { if (Settings.$('ps-enabled').checked) Settings.applyPrintServer({ port: parseInt(Settings.$('ps-port').value, 10) }); });
+Settings.$('ps-regen').addEventListener('click', () => { if (confirm('สร้างรหัสใหม่? มือถือที่จับคู่ไว้แล้วจะพิมพ์ไม่ได้จนกว่าจะใส่รหัสใหม่')) Settings.applyPrintServer({ regenerate: true }); });
+Settings.$('ps-copy').addEventListener('click', async () => { try { await navigator.clipboard.writeText(Settings.$('ps-token').value); Settings.$('set-msg').textContent = 'คัดลอกรหัสแล้ว'; } catch { Settings.$('ps-token').select(); } });
 Settings.$('btn-save-settings').addEventListener('click', () => Settings.save());
 Settings.$('btn-refresh-products').addEventListener('click', () => Settings.refresh());
 Settings.$('btn-open-data').addEventListener('click', () => window.api.openDataFolder());

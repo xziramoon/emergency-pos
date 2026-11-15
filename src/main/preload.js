@@ -33,6 +33,8 @@ contextBridge.exposeInMainWorld('api', {
   exportBills: call('transfer:export'),
   importBills: call('transfer:import'),
   printSummary: call('print:summary'),
+  getPrintServer: call('printserver:get'),
+  setPrintServer: call('printserver:set'),
   onBillsChanged: (cb) => ipcRenderer.on('bills:changed', () => cb()),
   onSendProgress: (cb) => ipcRenderer.on('send:progress', (_e, p) => cb(p)),
   onUpdateStatus: (cb) => ipcRenderer.on('update:status', (_e, s) => cb(s)),
