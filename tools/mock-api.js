@@ -39,7 +39,7 @@
     return { ok: true, done: true, typed: n, total: all.length, bill: b };
   }
 
-  const psState = { enabled: true, running: true, port: 8765, token: '3f9a1c07b2d84e56a0c1d7e8f9b23a45', addresses: ['192.168.1.20'], error: '' };
+  const psState = { enabled: true, running: true, port: 8765, token: '3f9a1c07b2d84e56a0c1d7e8f9b23a45', addresses: ['192.168.1.20'], error: '', link: 'http://192.168.1.20:8765/#t=3f9a1c07b2d84e56a0c1d7e8f9b23a45', qrSvg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8"><path d="M0 0h3v3H0zM5 0h3v3H5zM0 5h3v3H0zM4 4h1v1H4zM6 5h2v1H6zM5 7h1v1H5z"/></svg>' };
   window.api = {
     getSettings: async () => structuredClone(settings),
     saveSettings: async (s) => { settings = structuredClone(s); return s; },

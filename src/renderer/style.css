@@ -80,6 +80,9 @@ input::placeholder, textarea::placeholder { color: #75879a; }
 input:hover, textarea:hover, select:hover { border-color: #b3c1ce; }
 input:focus, textarea:focus, select:focus { outline: 3px solid rgba(26, 100, 192, .28); border-color: var(--focus); }
 input[type=number] { font-variant-numeric: tabular-nums; }
+.ps-qr-row { display: flex; gap: 18px; align-items: center; margin-top: 14px; }
+.ps-qr { width: 168px; height: 168px; flex: none; background: #fff; border: 1.5px solid var(--line); border-radius: 10px; padding: 6px; }
+.ps-qr svg { width: 100%; height: 100%; display: block; }
 label.check { display: flex; align-items: center; gap: 10px; font-weight: 600; }
 label.check input { width: 22px; height: 22px; margin: 0; flex: none; }
 .pay-method input[type=number]::-webkit-inner-spin-button, .pay-method input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }

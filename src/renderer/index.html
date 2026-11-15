@@ -363,6 +363,13 @@
             <label>ที่อยู่ที่ใส่ในมือถือ <input id="ps-address" type="text" readonly></label>
             <label>รหัสจับคู่ (โทเค็น) <input id="ps-token" type="text" readonly></label>
           </div>
+          <div class="ps-qr-row">
+            <div id="ps-qr" class="ps-qr" aria-label="QR สำหรับเปิดหน้าทดสอบในมือถือ"></div>
+            <div>
+              <strong>ลองจากมือถือ:</strong> ให้มือถือต่อ Wi-Fi เดียวกัน สแกน QR นี้ จะเปิดหน้าทดสอบพิมพ์พร้อมรหัสที่ใส่ให้แล้ว
+              <p id="ps-link" class="muted"></p>
+            </div>
+          </div>
           <div class="row">
             <button id="ps-copy" class="btn btn-quiet">คัดลอกรหัส</button>
             <button id="ps-regen" class="btn btn-quiet">สร้างรหัสใหม่ (เครื่องที่จับคู่ไว้จะใช้ไม่ได้)</button>

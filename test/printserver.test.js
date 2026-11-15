@@ -32,7 +32,7 @@ function req(port, { method = 'GET', path = '/ping', token = TOKEN, body, header
     const r = http.request({ host: '127.0.0.1', port, method, path, headers: h }, (res) => {
       let s = '';
       res.on('data', (c) => { s += c; });
-      res.on('end', () => { let j = null; try { j = JSON.parse(s); } catch { /* not json */ } resolve({ status: res.statusCode, json: j }); });
+      res.on('end', () => { let j = null; try { j = JSON.parse(s); } catch { /* not json */ } resolve({ status: res.statusCode, json: j, text: s, type: res.headers['content-type'] }); });
     });
     r.on('error', reject);
     if (data) r.write(data);
@@ -180,4 +180,39 @@ test('controller: a port already in use reports a Thai error and does not throw'
   hog.close();
   assert.equal(i.running, false);
   assert.match(i.error, /พอร์ต/);
+});
+
+test('GET / serves the phone test page without a token and never embeds the token', async () => {
+  const { srv, port } = await start();
+  const r = await req(port, { path: '/', token: null });
+  await srv.close();
+  assert.equal(r.status, 200);
+  assert.ok(String(r.type).startsWith('text/html'));
+  assert.ok(r.text.includes('/print-test') && r.text.includes('/print'));
+  assert.ok(!r.text.includes(TOKEN));
+});
+
+test('the test page cannot be used to print: /print still needs the token', async () => {
+  const { srv, port, calls } = await start();
+  const r = await req(port, { method: 'POST', path: '/print', token: null, body: bill() });
+  await srv.close();
+  assert.equal(r.status, 401);
+  assert.equal(calls.print.length, 0);
+});
+
+test('controller: info gives a phone link with the token in the #part, and a QR of it', async () => {
+  const asked = [];
+  let settings = { machineId: 'POS01', printServer: { enabled: false, port: 0, token: '' } };
+  const c = createController({
+    loadSettings: () => settings, saveSettings: (s) => { settings = s; },
+    print: async () => {}, printTest: async () => {}, addresses: () => ['192.168.1.20'], host: '127.0.0.1',
+    qr: (t) => { asked.push(t); return '<svg/>'; },
+  });
+  const off = await c.info();
+  assert.equal(off.link, '');
+  const on = await c.apply({ enabled: true });
+  await c.stop();
+  assert.equal(on.link, `http://192.168.1.20:${on.port}/#t=${on.token}`);
+  assert.equal(on.qrSvg, '<svg/>');
+  assert.equal(asked.at(-1), on.link);
 });

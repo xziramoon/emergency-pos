@@ -67,6 +67,7 @@ if (!app.requestSingleInstanceLock()) {
       print: relayPrint,
       printTest: () => focusSafePrint('<!doctype html><meta charset="utf-8"><body style="font:14pt Tahoma;width:72mm;margin:0 4mm"><p>ทดสอบเครื่องพิมพ์ (จากมือถือ)</p><p>POS ฉุกเฉิน</p></body>', store.loadSettings(dir).printer),
       addresses: lanAddresses,
+      qr: (text) => { const q = require('qrcode-generator')(0, 'M'); q.addData(text); q.make(); return q.createSvgTag({ cellSize: 4, margin: 2, scalable: true }); },
     });
     printServer.init().catch((e) => console.error('print server init failed', e));
 

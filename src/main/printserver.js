@@ -47,6 +47,11 @@ function createPrintServer(opts) {
   const server = http.createServer(async (req, res) => {
     try {
       const url = (req.url || '').split('?')[0];
+      // The phone test page is static and carries no secret; everything else needs the token.
+      if (url === '/' && req.method === 'GET') {
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+        return res.end(require('./testpage'));
+      }
       const m = /^Bearer (.+)$/.exec(req.headers.authorization || '');
       if (!tokenOk(m && m[1], opts.getToken())) return send(res, 401, { ok: false, error: 'ไม่ได้รับอนุญาต (โทเค็นไม่ตรง)' });
 
@@ -121,7 +126,11 @@ function createController(deps) {
 
   const info = async () => {
     const ps = cfg();
-    return { enabled: ps.enabled, running: !!running, port: running ? running.port : ps.port, token: ps.token, addresses: deps.addresses(), error };
+    const addresses = deps.addresses();
+    const port = running ? running.port : ps.port;
+    // The token rides in the #part: browsers never send it to the server, and the test page reads it from there.
+    const link = running && addresses.length ? `http://${addresses[0]}:${port}/#t=${ps.token}` : '';
+    return { enabled: ps.enabled, running: !!running, port, token: ps.token, addresses, error, link, qrSvg: link && deps.qr ? deps.qr(link) : '' };
   };
 
   return {

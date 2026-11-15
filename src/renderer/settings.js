@@ -51,6 +51,11 @@ const Settings = {
     this.$('ps-detail').hidden = !i.running;
     this.$('ps-token').value = i.token;
     this.$('ps-address').value = i.addresses.length ? i.addresses.map((a) => `${a}:${i.port}`).join('  หรือ  ') : 'ไม่พบเครือข่าย (เชื่อม Wi-Fi หรือสายแลนก่อน)';
+    // The SVG comes from our own main process (qrcode-generator), not from the network.
+    const qr = this.$('ps-qr');
+    const doc = new DOMParser().parseFromString(i.qrSvg || '<svg xmlns="http://www.w3.org/2000/svg"/>', 'image/svg+xml');
+    qr.replaceChildren(document.importNode(doc.documentElement, true));
+    this.$('ps-link').textContent = i.link ? i.link.replace(/#t=.*/, '') : '';
     this.$('ps-state').textContent = i.error ? i.error
       : i.running ? 'เปิดอยู่ รอรับงานพิมพ์จากมือถือ'
         : i.enabled ? 'เปิดไม่สำเร็จ' : 'ปิดอยู่';
