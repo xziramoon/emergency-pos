@@ -4,7 +4,7 @@ const store = require('./store');
 const { refreshProducts } = require('./products-store');
 const { findByBarcode, searchByName } = require('../shared/products');
 const { confirmAndPrint } = require('./print');
-const { buildReceipt, renderReceiptHtml } = require('../shared/receipt');
+const { buildReceipt, renderReceiptHtml, buildTestSlip } = require('../shared/receipt');
 const billops = require('./billops');
 const transfer = require('./transfer');
 const { summarize } = require('../shared/summary');
@@ -87,8 +87,7 @@ function register(ipc, ctx) {
   }));
   ipc.handle(CHANNELS.printReceipt, (_e, bill) => asResult(() => printReceipt(bill)));
   ipc.handle(CHANNELS.printTest, () => asResult(() => ctx.printHtml(
-    '<!doctype html><meta charset="utf-8"><body style="font:14pt Tahoma;width:72mm;margin:0 4mm"><p>ทดสอบเครื่องพิมพ์</p><p>POS ฉุกเฉิน</p></body>',
-    store.loadSettings(ctx.dir).printer)));
+    renderReceiptHtml(buildTestSlip()), store.loadSettings(ctx.dir).printer)));
   ipc.handle(CHANNELS.openDrawer, () => asResult(() => ctx.openDrawerRaw(store.loadSettings(ctx.dir).printer)));
   // Update flow: the renderer shows a banner; installing restarts the app, so only when a download is complete.
   ipc.handle(CHANNELS.getUpdateStatus, () => ({ ...ctx.state.update, current: ctx.version }));

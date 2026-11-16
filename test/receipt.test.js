@@ -126,3 +126,11 @@ test('renderReceiptHtml escapes HTML in names and makes the summary bold', () =>
   assert.ok(html.includes('80mm'));
   assert.ok(/<b>[^<]*รายการ[^<]*<\/b>/.test(html));
 });
+
+test('test slip prints through the receipt page (80mm auto page, 64mm body)', () => {
+  const R = require('../src/shared/receipt');
+  const html = R.renderReceiptHtml(R.buildTestSlip('จากมือถือ'));
+  assert.ok(html.includes('@page { size: 80mm auto; margin: 0; }'));
+  assert.ok(html.includes('width: 64mm'));
+  assert.ok(html.includes('ทดสอบเครื่องพิมพ์') && html.includes('จากมือถือ'));
+});

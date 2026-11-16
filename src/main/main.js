@@ -7,7 +7,7 @@ const { register } = require('./ipc');
 const { printHtml, openDrawerRaw } = require('./print');
 const { runTyper } = require('./typer');
 const { createController } = require('./printserver');
-const { buildReceipt, renderReceiptHtml } = require('../shared/receipt');
+const { buildReceipt, renderReceiptHtml, buildTestSlip } = require('../shared/receipt');
 const { screen } = require('electron');
 const { setupAutoUpdate } = require('./updater');
 
@@ -65,7 +65,7 @@ if (!app.requestSingleInstanceLock()) {
     const printServer = createController({
       loadSettings: () => store.loadSettings(dir), saveSettings: (s) => store.saveSettings(dir, s),
       print: relayPrint,
-      printTest: () => focusSafePrint('<!doctype html><meta charset="utf-8"><body style="font:14pt Tahoma;width:72mm;margin:0 4mm"><p>ทดสอบเครื่องพิมพ์ (จากมือถือ)</p><p>POS ฉุกเฉิน</p></body>', store.loadSettings(dir).printer),
+      printTest: () => focusSafePrint(renderReceiptHtml(buildTestSlip('จากมือถือ')), store.loadSettings(dir).printer),
       addresses: lanAddresses,
       qr: (text) => { const q = require('qrcode-generator')(0, 'M'); q.addData(text); q.make(); return q.createSvgTag({ cellSize: 4, margin: 2, scalable: true }); },
     });

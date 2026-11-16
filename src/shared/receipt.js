@@ -150,7 +150,15 @@ ${body}
     return { lines, text: plain.join('\n') };
   }
 
-  const api = { buildReceipt, renderReceiptHtml, buildSummary, renderSummaryHtml: renderReceiptHtml, WIDTH };
+  // A short slip for the "print test" buttons. It goes through renderReceiptHtml so the page size
+  // (80mm wide, height = content) matches real receipts; a bare page leaves the driver's own paper length.
+  function buildTestSlip(note) {
+    const lines = [{ kind: 'center', text: 'ทดสอบเครื่องพิมพ์' }, { kind: 'center', text: 'POS ฉุกเฉิน' }];
+    if (note) lines.push({ kind: 'center', text: String(note) });
+    return { lines };
+  }
+
+  const api = { buildReceipt, renderReceiptHtml, buildSummary, buildTestSlip, renderSummaryHtml: renderReceiptHtml, WIDTH };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else window.Receipt = api;
 })();

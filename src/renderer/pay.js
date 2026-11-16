@@ -84,6 +84,12 @@ const Pay = {
     this.$('dlg-pay').addEventListener('close', () => { if (!this.justPaid) Sell.setStep(1); });
     this.$('form-pay').addEventListener('submit', (e) => this.confirm(e));
     this.$('pay-cancel').addEventListener('click', () => { this.$('dlg-pay').close(); });
+    // F12 = ยืนยันรับเงิน (same path as clicking the button, so it only works when the button is enabled).
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'F12' || !this.$('dlg-pay').open) return;
+      e.preventDefault();
+      if (!this.$('pay-confirm').disabled) this.$('form-pay').requestSubmit();
+    });
   },
 };
 
