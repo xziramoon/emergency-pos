@@ -7,7 +7,7 @@ const { register } = require('./ipc');
 const { printHtml, openDrawerRaw } = require('./print');
 const { runTyper } = require('./typer');
 const { createController } = require('./printserver');
-const { buildReceipt, renderReceiptHtml, buildTestSlip } = require('../shared/receipt');
+const { buildReceipt, renderReceiptHtml, buildTestSlip, layoutOf } = require('../shared/receipt');
 const { screen } = require('electron');
 const { setupAutoUpdate } = require('./updater');
 
@@ -60,12 +60,13 @@ if (!app.requestSingleInstanceLock()) {
     };
     const relayPrint = async (bill) => {
       const st = store.loadSettings(dir);
-      await focusSafePrint(renderReceiptHtml(buildReceipt(bill, { shopName: st.shopName })), st.printer);
+      const lay = layoutOf(st);
+      await focusSafePrint(renderReceiptHtml(buildReceipt(bill, { shopName: st.shopName }), lay), st.printer, lay);
     };
     const printServer = createController({
       loadSettings: () => store.loadSettings(dir), saveSettings: (s) => store.saveSettings(dir, s),
       print: relayPrint,
-      printTest: () => focusSafePrint(renderReceiptHtml(buildTestSlip('จากมือถือ')), store.loadSettings(dir).printer),
+      printTest: () => { const st = store.loadSettings(dir), lay = layoutOf(st); return focusSafePrint(renderReceiptHtml(buildTestSlip('จากมือถือ'), lay), st.printer, lay); },
       addresses: lanAddresses,
       qr: (text) => { const q = require('qrcode-generator')(0, 'M'); q.addData(text); q.make(); return q.createSvgTag({ cellSize: 4, margin: 2, scalable: true }); },
     });

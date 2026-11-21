@@ -9,6 +9,9 @@ const DEFAULT_SETTINGS = {
   productsUrl: '', // entered once in Settings: the repo is public, so the Sheet link is not shipped
   columnMap: null,
   printer: '',
+  printMode: 'driver', // 'content' = send an explicit page height measured from the slip (for drivers that feed a long blank page)
+  printLeftMm: 4,
+  printWidthMm: 64,
   delayMs: 600,
   windowLike: '*Sea And Hill POS*',
 };

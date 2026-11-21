@@ -134,3 +134,13 @@ test('test slip prints through the receipt page (80mm auto page, 64mm body)', ()
   assert.ok(html.includes('width: 64mm'));
   assert.ok(html.includes('ทดสอบเครื่องพิมพ์') && html.includes('จากมือถือ'));
 });
+
+test('receipt layout follows leftMm / widthMm and clamps nonsense values', () => {
+  const R = require('../src/shared/receipt');
+  const html = R.renderReceiptHtml(R.buildTestSlip(), { leftMm: 6, widthMm: 60 });
+  assert.ok(html.includes('width: 60mm; margin: 0 0 0 6mm'));
+  assert.ok(R.renderReceiptHtml(R.buildTestSlip()).includes('width: 64mm; margin: 0 0 0 4mm'));
+  const bad = R.layoutOf({ printLeftMm: 'x', printWidthMm: 500, printMode: 'zzz' });
+  assert.deepEqual(bad, { leftMm: 4, widthMm: 72, mode: 'driver' });
+  assert.deepEqual(R.layoutOf({ printLeftMm: 2, printWidthMm: 70, printMode: 'content' }), { leftMm: 2, widthMm: 70, mode: 'content' });
+});

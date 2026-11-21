@@ -14,7 +14,7 @@ async function confirmAndPrint({ bill, saveBill, printReceipt }) {
 }
 
 // Silent print of an HTML page through the Windows driver (drawer opens per the driver's setting).
-function printHtml(html, deviceName) {
+function printHtml(html, deviceName, layout) {
   const { BrowserWindow } = require('electron');
   return new Promise((resolve, reject) => {
     const w = new BrowserWindow({ show: false, webPreferences: { sandbox: true, contextIsolation: true, nodeIntegration: false } });
@@ -28,11 +28,16 @@ function printHtml(html, deviceName) {
     };
     const timer = setTimeout(() => finish(new Error('เครื่องพิมพ์ไม่ตอบสนอง (หมดเวลา)')), 20000);
     w.webContents.on('did-fail-load', (_e, _c, desc) => finish(new Error('โหลดใบเสร็จไม่สำเร็จ: ' + desc)));
-    w.webContents.on('did-finish-load', () => {
-      w.webContents.print(
-        { silent: true, deviceName: deviceName || '', printBackground: false, margins: { marginType: 'none' } },
-        (ok, reason) => finish(ok ? null : new Error('พิมพ์ไม่สำเร็จ: ' + (reason || 'ไม่ทราบสาเหตุ')))
-      );
+    w.webContents.on('did-finish-load', async () => {
+      const opts = { silent: true, deviceName: deviceName || '', printBackground: false, margins: { marginType: 'none' } };
+      if (layout && layout.mode === 'content') {
+        // Some drivers default to a very long page and feed it all. Tell them the real height (1 CSS px = 264.58 microns).
+        try {
+          const px = await w.webContents.executeJavaScript('document.documentElement.scrollHeight');
+          opts.pageSize = { width: 80000, height: Math.max(30000, Math.ceil(px * 264.58) + 6000) };
+        } catch { /* fall back to the driver's page */ }
+      }
+      w.webContents.print(opts, (ok, reason) => finish(ok ? null : new Error('พิมพ์ไม่สำเร็จ: ' + (reason || 'ไม่ทราบสาเหตุ'))));
     });
     w.loadURL('data:text/html;charset=utf-8;base64,' + Buffer.from(html, 'utf8').toString('base64'));
   });

@@ -361,6 +361,24 @@
         <label>เครื่องพิมพ์
           <select id="set-printer"><option value="">(เครื่องพิมพ์เริ่มต้นของ Windows)</option></select>
         </label>
+        <label>ชุดค่าสำเร็จรูปตามรุ่นเครื่องพิมพ์
+          <select id="set-print-preset">
+            <option value="">เลือกเพื่อตั้งค่าให้ทันที...</option>
+            <option value="old">เครื่องพิมพ์รุ่นเก่า (เครื่องที่ร้านเดิม): ตามไดรเวอร์ ขอบ 4 กว้าง 64</option>
+            <option value="new">เครื่องพิมพ์รุ่นใหม่ เช่น Epson TM-T82: ยาวตามเนื้อหา ขอบ 4 กว้าง 64</option>
+          </select>
+        </label>
+        <label>ขนาดหน้ากระดาษที่ส่งให้เครื่องพิมพ์
+          <select id="set-print-mode">
+            <option value="driver">ตามค่าของไดรเวอร์ (ใช้ได้กับเครื่องที่ร้านเดิม)</option>
+            <option value="content">ยาวตามเนื้อหาใบเสร็จ (แก้อาการกระดาษเปล่าไหลออกมา)</option>
+          </select>
+        </label>
+        <div class="two-col">
+          <label>ขอบซ้าย (มม.)<input id="set-print-left" type="number" min="0" max="20" step="0.5"></label>
+          <label>ความกว้างตัวหนังสือ (มม.)<input id="set-print-width" type="number" min="40" max="72" step="1"></label>
+        </div>
+        <p class="muted">กระดาษ 80 มม.: ถ้าตัวเลขขวาสุดโดนตัด ให้ลดความกว้างลง ถ้ากระดาษเปล่าไหลออกไม่หยุด ให้เลือก "ยาวตามเนื้อหา" แล้วกดพิมพ์ทดสอบ (บันทึกให้อัตโนมัติ)</p>
         <div class="row">
           <button id="btn-print-test" class="btn"><svg class="ic"><use href="#i-printer"/></svg>พิมพ์ทดสอบ</button>
           <button id="btn-drawer-test" class="btn btn-quiet">ทดสอบเปิดลิ้นชัก (สำรอง)</button>

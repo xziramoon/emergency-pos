@@ -16,6 +16,9 @@ const Settings = {
       this.$('map-' + k).value = s.columnMap && s.columnMap[k] >= 0 ? s.columnMap[k] + 1 : '';
     }
     this.$('set-msg').textContent = '';
+    this.$('set-print-mode').value = s.printMode === 'content' ? 'content' : 'driver';
+    this.$('set-print-left').value = s.printLeftMm ?? 4;
+    this.$('set-print-width').value = s.printWidthMm ?? 64;
     await this.fillPrinters(s.printer);
     try { this.$('set-version').textContent = 'เวอร์ชันที่ใช้อยู่: ' + (await window.api.getUpdateStatus()).current; } catch { /* leave blank */ }
     await this.showProductsInfo();
@@ -79,6 +82,8 @@ const Settings = {
     return { barcode: vals[0] - 1, name: vals[1] - 1, unit: vals[2] - 1, price: vals[3] - 1 };
   },
 
+  numOr(v, d) { const n = parseFloat(v); return Number.isFinite(n) ? n : d; },
+
   async save() {
     const cur = await window.api.getSettings();
     const staff = this.$('set-staff').value.split(/\r?\n/).map((x) => x.trim()).filter(Boolean);
@@ -90,6 +95,9 @@ const Settings = {
       shopName: this.$('set-shop').value.trim() || cur.shopName,
       productsUrl: this.$('set-url').value.trim() || cur.productsUrl,
       printer: this.$('set-printer').value,
+      printMode: this.$('set-print-mode').value === 'content' ? 'content' : 'driver',
+      printLeftMm: this.numOr(this.$('set-print-left').value, cur.printLeftMm ?? 4),
+      printWidthMm: this.numOr(this.$('set-print-width').value, cur.printWidthMm ?? 64),
       delayMs: Math.max(100, parseInt(this.$('set-delay').value, 10) || cur.delayMs),
       windowLike: this.$('set-window').value.trim() || cur.windowLike,
       columnMap: this.readColumnMap(),
@@ -121,6 +129,16 @@ Settings.$('ps-regen').addEventListener('click', (e) => {
   Settings.applyPrintServer({ regenerate: true });
 });
 Settings.$('ps-copy').addEventListener('click', async () => { try { await navigator.clipboard.writeText(Settings.$('ps-token').value); Settings.$('set-msg').textContent = 'คัดลอกรหัสแล้ว'; } catch { Settings.$('ps-token').select(); } });
+Settings.$('set-print-preset').addEventListener('change', (e) => {
+  const v = e.target.value;
+  if (!v) return;
+  Settings.$('set-print-mode').value = v === 'new' ? 'content' : 'driver';
+  Settings.$('set-print-left').value = 4;
+  Settings.$('set-print-width').value = 64;
+  e.target.value = '';
+  Settings.save();
+  Settings.$('set-msg').textContent = v === 'new' ? 'ตั้งค่าสำหรับเครื่องรุ่นใหม่แล้ว กดพิมพ์ทดสอบได้เลย' : 'ตั้งค่าสำหรับเครื่องรุ่นเก่าแล้ว (ค่าเดิมที่ใช้ได้ที่ร้าน)';
+});
 Settings.$('btn-save-settings').addEventListener('click', () => Settings.save());
 Settings.$('btn-refresh-products').addEventListener('click', () => Settings.refresh());
 Settings.$('btn-open-data').addEventListener('click', () => window.api.openDataFolder());

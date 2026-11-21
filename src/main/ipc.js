@@ -4,7 +4,7 @@ const store = require('./store');
 const { refreshProducts } = require('./products-store');
 const { findByBarcode, searchByName } = require('../shared/products');
 const { confirmAndPrint } = require('./print');
-const { buildReceipt, renderReceiptHtml, buildTestSlip } = require('../shared/receipt');
+const { buildReceipt, renderReceiptHtml, buildTestSlip, layoutOf } = require('../shared/receipt');
 const billops = require('./billops');
 const transfer = require('./transfer');
 const { summarize } = require('../shared/summary');
@@ -77,8 +77,10 @@ function register(ipc, ctx) {
   ipc.handle(CHANNELS.listPending, () => store.listPending(ctx.dir));
   ipc.handle(CHANNELS.listPrinters, () => ctx.getPrinters());
   ipc.handle(CHANNELS.getWarnings, () => store.getWarnings());
-  const receiptHtml = (bill) => renderReceiptHtml(buildReceipt(bill, { shopName: store.loadSettings(ctx.dir).shopName }));
-  const printReceipt = (bill) => ctx.printHtml(receiptHtml(bill), store.loadSettings(ctx.dir).printer);
+  const printReceipt = (bill) => {
+    const st = store.loadSettings(ctx.dir), lay = layoutOf(st);
+    return ctx.printHtml(renderReceiptHtml(buildReceipt(bill, { shopName: st.shopName }), lay), st.printer, lay);
+  };
   const asResult = async (fn) => { try { await fn(); return { ok: true }; } catch (e) { return { ok: false, error: (e && e.message) || String(e) }; } };
 
   // Save first, then print (spec 6.3). A save failure rejects; a print failure comes back as printed:false.
@@ -86,8 +88,10 @@ function register(ipc, ctx) {
     bill, saveBill: (b) => store.saveBill(ctx.dir, b), printReceipt,
   }));
   ipc.handle(CHANNELS.printReceipt, (_e, bill) => asResult(() => printReceipt(bill)));
-  ipc.handle(CHANNELS.printTest, () => asResult(() => ctx.printHtml(
-    renderReceiptHtml(buildTestSlip()), store.loadSettings(ctx.dir).printer)));
+  ipc.handle(CHANNELS.printTest, () => asResult(() => {
+    const st = store.loadSettings(ctx.dir), lay = layoutOf(st);
+    return ctx.printHtml(renderReceiptHtml(buildTestSlip(), lay), st.printer, lay);
+  }));
   ipc.handle(CHANNELS.openDrawer, () => asResult(() => ctx.openDrawerRaw(store.loadSettings(ctx.dir).printer)));
   // Update flow: the renderer shows a banner; installing restarts the app, so only when a download is complete.
   ipc.handle(CHANNELS.getUpdateStatus, () => ({ ...ctx.state.update, current: ctx.version }));
@@ -136,7 +140,8 @@ function register(ipc, ctx) {
   // Summary is computed here from the bills the day screen shows, so what prints is what was added up.
   ipc.handle(CHANNELS.printSummary, (_e, { date, machine, bills }) => asResult(() => {
     const st = store.loadSettings(ctx.dir);
-    return ctx.printHtml(renderSummaryHtml(buildSummary(summarize(bills || []), { shopName: st.shopName, date, machine })), st.printer);
+    const lay = layoutOf(st);
+    return ctx.printHtml(renderSummaryHtml(buildSummary(summarize(bills || []), { shopName: st.shopName, date, machine }), lay), st.printer, lay);
   }));
   // LAN print relay (design 5.3): settings screen reads/changes it; the controller lives in main.
   ipc.handle(CHANNELS.getPrintServer, () => ctx.printServer.info());

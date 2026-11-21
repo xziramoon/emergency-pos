@@ -88,7 +88,8 @@
   const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
   // 80 mm page. Rows use flex so the amount stays right-aligned whatever the font.
-  function renderReceiptHtml(receipt) {
+  function renderReceiptHtml(receipt, layout) {
+    const { leftMm, widthMm } = layoutOf({ printLeftMm: layout && layout.leftMm, printWidthMm: layout && layout.widthMm });
     const body = receipt.lines.map((x) => {
       if (x.kind === 'center') return `<div class="c">${esc(x.text)}</div>`;
       if (x.kind === 'rule') return '<hr>';
@@ -99,7 +100,7 @@
     return `<!doctype html><html lang="th"><head><meta charset="utf-8"><style>
 @page { size: 80mm auto; margin: 0; }
 html, body { margin: 0; padding: 0; background: #fff; }
-body { width: 64mm; margin: 0 0 0 4mm; padding: 2mm 0; color: #000; font: 12pt/1.25 "Tahoma", "Leelawadee UI", sans-serif; }
+body { width: ${widthMm}mm; margin: 0 0 0 ${leftMm}mm; padding: 2mm 0; color: #000; font: 12pt/1.25 "Tahoma", "Leelawadee UI", sans-serif; }
 .c { text-align: center; }
 .r { display: flex; justify-content: space-between; gap: 4mm; }
 hr { border: 0; border-top: 1px dashed #000; margin: 1mm 0; }
@@ -150,6 +151,12 @@ ${body}
     return { lines, text: plain.join('\n') };
   }
 
+  // Per-printer layout from Settings. Defaults are the values that fit the shop's first printer; the page is 80mm wide.
+  function layoutOf(st = {}) {
+    const num = (v, d, lo, hi) => { const n = Number(v); return Number.isFinite(n) && v !== '' && v !== null ? Math.min(hi, Math.max(lo, n)) : d; };
+    return { leftMm: num(st.printLeftMm, 4, 0, 20), widthMm: num(st.printWidthMm, 64, 40, 72), mode: st.printMode === 'content' ? 'content' : 'driver' };
+  }
+
   // A short slip for the "print test" buttons. It goes through renderReceiptHtml so the page size
   // (80mm wide, height = content) matches real receipts; a bare page leaves the driver's own paper length.
   function buildTestSlip(note) {
@@ -158,7 +165,7 @@ ${body}
     return { lines };
   }
 
-  const api = { buildReceipt, renderReceiptHtml, buildSummary, buildTestSlip, renderSummaryHtml: renderReceiptHtml, WIDTH };
+  const api = { buildReceipt, renderReceiptHtml, buildSummary, buildTestSlip, layoutOf, renderSummaryHtml: renderReceiptHtml, WIDTH };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else window.Receipt = api;
 })();

@@ -1,6 +1,6 @@
 {
   "name": "emergency-pos",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "description": "POS ฉุกเฉิน - ร้านอึ้งลักเส็ง",
   "main": "src/main/main.js",
   "scripts": {
